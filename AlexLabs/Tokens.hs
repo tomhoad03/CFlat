@@ -2,7 +2,7 @@
 {-# LANGUAGE CPP #-}
 {-# LINE 1 "Tokens.x" #-}
  
-module Tokens where 
+module Tokens (Token(..), AlexPosn(..), alexScanTokens, token_posn) where 
 
 #if __GLASGOW_HASKELL__ >= 603
 #include "ghcconfig.h"
@@ -80,23 +80,23 @@ type Byte = Word8
 -- The input type
 
 
+type AlexInput = (AlexPosn,     -- current position,
+                  Char,         -- previous char
+                  [Byte],       -- pending bytes on current char
+                  String)       -- current input string
 
+ignorePendingBytes :: AlexInput -> AlexInput
+ignorePendingBytes (p,c,_ps,s) = (p,c,[],s)
 
+alexInputPrevChar :: AlexInput -> Char
+alexInputPrevChar (_p,c,_bs,_s) = c
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
+alexGetByte (p,c,(b:bs),s) = Just (b,(p,c,bs,s))
+alexGetByte (_,_,[],[]) = Nothing
+alexGetByte (p,_,[],(c:s))  = let p' = alexMove p c
+                              in case utf8Encode' c of
+                                   (b, bs) -> p' `seq`  Just (b, (p', c, bs, s))
 
 
 
@@ -169,16 +169,16 @@ type Byte = Word8
 -- assuming the usual eight character tab stops.
 
 
+data AlexPosn = AlexPn !Int !Int !Int
+        deriving (Eq,Show)
 
+alexStartPos :: AlexPosn
+alexStartPos = AlexPn 0 1 1
 
-
-
-
-
-
-
-
-
+alexMove :: AlexPosn -> Char -> AlexPosn
+alexMove (AlexPn a l c) '\t' = AlexPn (a+1)  l     (c+alex_tab_size-((c-1) `mod` alex_tab_size))
+alexMove (AlexPn a l _) '\n' = AlexPn (a+1) (l+1)   1
+alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
 
 
 -- -----------------------------------------------------------------------------
@@ -340,25 +340,25 @@ type Byte = Word8
 -- Basic wrapper
 
 
-type AlexInput = (Char,[Byte],String)
 
-alexInputPrevChar :: AlexInput -> Char
-alexInputPrevChar (c,_,_) = c
 
--- alexScanTokens :: String -> [token]
-alexScanTokens str = go ('\n',[],str)
-  where go inp__@(_,_bs,s) =
-          case alexScan inp__ 0 of
-                AlexEOF -> []
-                AlexError _ -> error "lexical error"
-                AlexSkip  inp__' _ln     -> go inp__'
-                AlexToken inp__' len act -> act (take len s) : go inp__'
 
-alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
-alexGetByte (c,(b:bs),s) = Just (b,(c,bs,s))
-alexGetByte (_,[],[])    = Nothing
-alexGetByte (_,[],(c:s)) = case utf8Encode' c of
-                             (b, bs) -> Just (b, (c, bs, s))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -402,14 +402,14 @@ alexGetByte (_,[],(c:s)) = case utf8Encode' c of
 -- Adds text positions to the basic model.
 
 
-
-
-
-
-
-
-
-
+--alexScanTokens :: String -> [token]
+alexScanTokens str0 = go (alexStartPos,'\n',[],str0)
+  where go inp__@(pos,_,_,str) =
+          case alexScan inp__ 0 of
+                AlexEOF -> []
+                AlexError ((AlexPn _ line column),_,_,_) -> error $ "lexical error at line " ++ (show line) ++ ", column " ++ (show column)
+                AlexSkip  inp__' _ln     -> go inp__'
+                AlexToken inp__' len act -> act pos (take len str) : go inp__'
 
 
 
@@ -475,11 +475,11 @@ alex_base = listArray (0 :: Int, 28)
   , 0
   , 0
   , 0
+  , 0
   , 1101
   , 1176
   , 1263
   , 1338
-  , 0
   ]
 
 alex_table :: Array Int Int
@@ -490,7 +490,7 @@ alex_table = listArray (0 :: Int, 1593)
   , 12
   , 12
   , 12
-  , 25
+  , 26
   , 1
   , 12
   , 12
@@ -541,64 +541,64 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
-  , 28
+  , 24
   , 0
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 27
+  , 26
   , 26
   , 25
-  , 25
-  , 24
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 10
   , -1
   , -1
@@ -1471,16 +1471,16 @@ alex_table = listArray (0 :: Int, 1593)
   , -1
   , -1
   , -1
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -1488,139 +1488,74 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
   , 0
-  , 25
+  , 26
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 0
-  , 0
-  , 0
-  , 0
-  , 25
-  , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -1628,96 +1563,86 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 0
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 0
+  , 0
+  , 0
+  , 0
+  , 26
+  , 0
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
   , 0
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
   , 0
   , 0
   , 0
   , 0
   , 0
   , 0
-  , 7
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
   , 0
-  , 0
-  , 0
-  , 0
-  , 25
-  , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 27
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -1725,86 +1650,74 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 7
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
   , 0
-  , 25
+  , 26
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 28
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -1812,74 +1725,161 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 7
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
   , 0
-  , 25
+  , 26
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 0
+  , 7
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 0
+  , 0
+  , 0
+  , 0
+  , 26
+  , 0
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 15
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -1887,64 +1887,64 @@ alex_table = listArray (0 :: Int, 1593)
   , 0
   , 0
   , 7
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
   , 0
-  , 25
+  , 26
   , 0
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 14
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
-  , 25
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
+  , 26
   , 0
   , 0
   , 0
@@ -3755,43 +3755,60 @@ alex_actions = array (0 :: Int, 15)
   , (6,alex_action_10)
   , (5,alex_action_11)
   , (4,alex_action_12)
-  , (3,alex_action_12)
-  , (2,alex_action_12)
-  , (1,alex_action_12)
+  , (3,alex_action_13)
+  , (2,alex_action_13)
+  , (1,alex_action_13)
   , (0,alex_action_13)
   ]
 
-{-# LINE 26 "Tokens.x" #-}
+{-# LINE 25 "Tokens.x" #-}
  
+
+-- Action helpers
+tok f p s = f p s
+
 -- Each action has type :: String -> Token 
 -- The token type: 
 data Token = 
-  TokenLet         | 
-  TokenIn          | 
-  TokenInt Int     |
-  TokenVar String  | 
-  TokenEq          |
-  TokenPlus        |
-  TokenMinus       |
-  TokenTimes       |
-  TokenDiv         |
-  TokenLParen      |
-  TokenRParen      |
-  TokenExp       
-  deriving (Eq,Show) 
+  Let AlexPosn         | 
+  In AlexPosn          | 
+  Int AlexPosn Int     |
+  Var AlexPosn String  | 
+  Eq AlexPosn          |
+  Plus AlexPosn        |
+  Minus AlexPosn       |
+  Times AlexPosn       |
+  Div AlexPosn         |
+  LParen AlexPosn      |
+  RParen AlexPosn      |
+  Exp AlexPosn       
+  deriving (Eq,Show)
 
-alex_action_2 =  \s -> TokenLet 
-alex_action_3 =  \s -> TokenIn 
-alex_action_4 =  \s -> TokenInt (read s) 
-alex_action_5 =  \s -> TokenEq 
-alex_action_6 =  \s -> TokenPlus 
-alex_action_7 =  \s -> TokenMinus 
-alex_action_8 =  \s -> TokenTimes 
-alex_action_9 =  \s -> TokenDiv 
-alex_action_10 =  \s -> TokenLParen 
-alex_action_11 =  \s -> TokenRParen 
-alex_action_12 =  \s -> TokenVar s 
-alex_action_13 =  \s -> TokenExp 
+token_posn (Let p) = p
+token_posn (In p) = p
+token_posn (Int p _) = p
+token_posn (Var p _) = p
+token_posn (Eq p) = p
+token_posn (Plus p) = p
+token_posn (Minus p) = p
+token_posn (Times p) = p
+token_posn (Div p) = p
+token_posn (LParen p) = p
+token_posn (RParen p) = p
+token_posn (Exp p) = p
+
+alex_action_2 =  tok (\p s -> Let p) 
+alex_action_3 =  tok (\p s -> In p) 
+alex_action_4 =  tok (\p s -> Int p (read s)) 
+alex_action_5 =  tok (\p s -> Eq p) 
+alex_action_6 =  tok (\p s -> Plus p) 
+alex_action_7 =  tok (\p s -> Minus p) 
+alex_action_8 =  tok (\p s -> Times p) 
+alex_action_9 =  tok (\p s -> Div p) 
+alex_action_10 =  tok (\p s -> LParen p) 
+alex_action_11 =  tok (\p s -> RParen p) 
+alex_action_12 =  tok (\p s -> Exp p) 
+alex_action_13 =  tok (\p s -> Var p s) 
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE
