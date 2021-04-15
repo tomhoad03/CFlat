@@ -1,36 +1,44 @@
 module Main where
 
 import Tokens ( Token, alexScanTokens )
-import Grammar ( parseCalc )
+import Grammar ( parseCalc, Exp(..))
 import System.IO ( stderr, hPutStr )
 import System.Environment ( getArgs )
 import Control.Exception ( catch, ErrorCall )
 
+-- read in the program from the cmd args
 main :: IO ()
-main = do a <- readFile "A.csv"
-          b <- readFile "B.csv"
-          putStrLn a
-          putStrLn b
-          catch lex' lexError
-
-lex' :: IO ()
-lex' = do (fileName : _) <- getArgs
+main = do (fileName : _) <- getArgs
           file <- readFile fileName
-          putStrLn ("Before lexing: " ++ file)
-          let lexedFile = alexScanTokens file
-          putStrLn ("After lexing: " ++ show lexedFile)
-          catch (parse lexedFile) parError
+          catch (lexer file) errorCall
 
-parse :: [Token] -> IO ()
-parse lexedFile = do let parsedFile = parseCalc lexedFile
-                     putStrLn ("After parsing: " ++ show parsedFile)
+-- lex the file
+lexer :: String -> IO ()
+lexer file = do let lexedFile = alexScanTokens file
+                catch (parser lexedFile) errorCall
 
-lexError :: ErrorCall -> IO ()
-lexError e = do let err = show e
-                hPutStr stderr ("Error: " ++ err)
-                return()
+-- parse the lexed file
+parser :: [Token] -> IO ()
+parser lexedFile = do let parsedFile = parseCalc lexedFile
+                      catch (solver parsedFile) errorCall
 
-parError :: ErrorCall -> IO ()
-parError e = do let err = show e
-                hPutStr stderr ("Error: " ++ err)
-                return()
+-- catch lexing and parsing errors
+errorCall :: ErrorCall -> IO ()
+errorCall e = do let err = show e
+                 hPutStr stderr ("Error: " ++ err)
+                 return ()
+
+-- solve the programs
+solver :: Exp -> IO ()
+solver parsedFile = do a <- readFile "A.csv"
+                       b <- readFile "B.csv"
+                       putStrLn a
+                       putStrLn b
+                       print (interpreter parsedFile)
+
+-- interpret the parsed file
+interpreter :: Exp -> String 
+interpreter (Let a b c) = "( let " ++ a ++ " = " ++ interpreter b ++ " in " ++ interpreter c ++ ") "
+interpreter (Expo a b) = "( " ++ interpreter a ++ " ^ "  ++ interpreter b ++ " )"
+interpreter (Int a) = show a
+interpreter (Var a) = a
