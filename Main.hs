@@ -1,13 +1,17 @@
 module Main where
 
-import Tokens
-import Grammar
-import System.IO
-import System.Environment
-import Control.Exception
+import Tokens ( Token, alexScanTokens )
+import Grammar ( parseCalc )
+import System.IO ( stderr, hPutStr )
+import System.Environment ( getArgs )
+import Control.Exception ( catch, ErrorCall )
 
 main :: IO ()
-main = catch lex' lexError
+main = do a <- readFile "A.csv"
+          b <- readFile "B.csv"
+          putStrLn a
+          putStrLn b
+          catch lex' lexError
 
 lex' :: IO ()
 lex' = do (fileName : _) <- getArgs
