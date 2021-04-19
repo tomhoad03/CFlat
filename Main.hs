@@ -38,8 +38,9 @@ solver :: Exp -> IO ()
 solver parsedFile = do files <- scanner
                        print files
 
-                       csvs <- mapM_ parseCsv files
-                       print csvs
+                       let csvs = map parseCsv files
+                       csv <- csvs !! 1
+                       print csv
                        
                        putStrLn (interpreter parsedFile)
 
