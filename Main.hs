@@ -4,7 +4,7 @@ import Tokens ( Token, alexScanTokens )
 import Grammar ( parseCalc, Exp(..))
 import System.IO ( stderr, hPutStr )
 import System.Environment ( getArgs )
-import System.FilePath ( takeExtension )
+import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 
@@ -36,25 +36,24 @@ errorCall e = do let err = show e
 -- solve the programs
 solver :: Exp -> IO ()
 solver parsedFile = do files <- scanner
-                       let csvs = map readFile files
-                       mapM_ converter csvs
+                       print files
+
+                       csvs <- mapM_ parseCsv files
+                       print csvs
+                       
                        putStrLn (interpreter parsedFile)
+
+-- parses a csv file
+parseCsv :: FilePath -> IO [String]
+parseCsv fileName = do a <- readFile fileName
+                       let csv = lines a
+                       return csv
 
 -- looks for csv files in the cd
 scanner :: IO [FilePath]
 scanner = do cd <- getCurrentDirectory
              files <- getDirectoryContents cd
              return (filter (\x -> takeExtension x == ".csv") files)
-
--- reads the csv files
-reader :: Monad m => [FilePath] -> m [IO String]
-reader csvs = do let files = map readFile csvs
-                 return files
-
--- parses a csv file
-converter :: IO String -> IO ()
-converter csv = do parseCsv <- csv
-                   print $ lines parseCsv
 
 -- interpret the parsed file
 interpreter :: Exp -> String 
