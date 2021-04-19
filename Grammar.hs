@@ -318,7 +318,8 @@ happySeq = happyDontSeq
 
 
 parseError :: [Token] -> a
-parseError _ = error "Parse error" 
+parseError _ = error "Parse Error" 
+parseError (x : xs) = error ("Parse error at line:column " ++ (tokenPosn x))
 data Exp = Let String Exp Exp 
          | Plus Exp Exp 
          | Minus Exp Exp 
