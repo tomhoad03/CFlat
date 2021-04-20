@@ -4,16 +4,15 @@ module Tokens where
 
 %wrapper "posn"
 $digit = 0-9
--- digits
 $alpha = [a-zA-Z]
--- alphabetic characters
 
 tokens :-
-	$white+ ;
-    "=D".* ;
-    load	 { \p s -> TokenLoad p   }
-	=	     { \p s -> TokenAssign p }
+	$white+  ;
+  "=D".*   ;
+  load	   { \p s -> TokenLoad p   }
+	=	       { \p s -> TokenAssign p }
 	\"	     { \p s -> TokenTxt p    } -- How to tell where speech marks start and end.
+  \.csv    { \p s -> TokenCsv p    } -- csv file extension
 	var	     { \p s -> TokenVar p    }
 	unite    { \p s -> TokenUnite p  }
 	preach   { \p s -> TokenPreach p }
@@ -32,32 +31,34 @@ tokens :-
 	$alpha [$alpha $digit \_ \’]*   { \p s -> TokenWord p s }
 	
 { 
-Data Token = 
-	TokenLoad AlexPosn        |
-	TokenAssign AlexPosn 	  |
-	TokenTxt AlexPosn  		  |
-	TokenVar AlexPosn 		  |
-	TokenUnite AlexPosn 	  |
-	TokenPreach AlexPosn 	  | 
-	TokenSelect AlexPosn 	  |
-	TokenWhere AlexPosn       |
-	TokenOf AlexPosn  		  |
-	TokenArr AlexPosn 		  |
-	TokenAsc AlexPosn 		  |
-	TokenDesc AlexPosn 		  | 
-	TokenNC AlexPosn 		  |
-	TokenCom AlexPosn 		  |
-	TokenEq AlexPosn 		  |
-	TokenLB AlexPosn 		  |
-	TokenRB AlexPosn          |
-	TokenInt AlexPosn  Int    |
-	TokenWord AlexPosn String 
-	deriving (Eq,Show)
-	
+data Token = 
+  TokenLoad AlexPosn        |
+  TokenAssign AlexPosn      |
+  TokenTxt AlexPosn         |
+  TokenCsv AlexPosn         |
+  TokenVar AlexPosn         |
+  TokenUnite AlexPosn       |
+  TokenPreach AlexPosn      | 
+  TokenSelect AlexPosn      |
+  TokenWhere AlexPosn       |
+  TokenOf AlexPosn          |
+  TokenArr AlexPosn         |
+  TokenAsc AlexPosn         |
+  TokenDesc AlexPosn        | 
+  TokenNC AlexPosn          |
+  TokenCom AlexPosn         |
+  TokenEq AlexPosn          |
+  TokenLB AlexPosn          |
+  TokenRB AlexPosn          |
+  TokenInt AlexPosn Int     |
+  TokenWord AlexPosn String
+  deriving (Eq,Show)
+
 tokenPosn :: Token -> String
 tokenPosn (TokenLoad (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTxt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenCsv  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnite  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPreach (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -74,5 +75,4 @@ tokenPosn (TokenLB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWord (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
-
 }
