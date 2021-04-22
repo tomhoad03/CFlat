@@ -11586,7 +11586,7 @@ data Token =
   TokenLoad AlexPosn        |
   TokenAssign AlexPosn      |
   TokenTxt AlexPosn         |
-  TokenCsv AlexPosn         |
+  TokenExt AlexPosn         |
   TokenVar AlexPosn         |
   TokenUnite AlexPosn       |
   TokenPreach AlexPosn      | 
@@ -11602,14 +11602,14 @@ data Token =
   TokenLB AlexPosn          |
   TokenRB AlexPosn          |
   TokenInt AlexPosn Int     |
-  TokenWord AlexPosn String
+  TokenWord AlexPosn String 
   deriving (Eq,Show)
 
 tokenPosn :: Token -> String
 tokenPosn (TokenLoad (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTxt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenCsv  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenExt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnite  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPreach (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -11630,7 +11630,7 @@ tokenPosn (TokenWord (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
 alex_action_2 =  \p s -> TokenLoad p   
 alex_action_3 =  \p s -> TokenAssign p 
 alex_action_4 =  \p s -> TokenTxt p    
-alex_action_5 =  \p s -> TokenCsv p    
+alex_action_5 =  \p s -> TokenExt p    
 alex_action_6 =  \p s -> TokenVar p    
 alex_action_7 =  \p s -> TokenUnite p  
 alex_action_8 =  \p s -> TokenPreach p 

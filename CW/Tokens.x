@@ -12,7 +12,7 @@ tokens :-
   load	   { \p s -> TokenLoad p   }
 	=	       { \p s -> TokenAssign p }
 	\"	     { \p s -> TokenTxt p    } -- How to tell where speech marks start and end.
-  \.csv    { \p s -> TokenCsv p    } -- csv file extension
+  \.csv    { \p s -> TokenExt p    } -- csv file extension
 	var	     { \p s -> TokenVar p    }
 	unite    { \p s -> TokenUnite p  }
 	preach   { \p s -> TokenPreach p }
@@ -35,7 +35,7 @@ data Token =
   TokenLoad AlexPosn        |
   TokenAssign AlexPosn      |
   TokenTxt AlexPosn         |
-  TokenCsv AlexPosn         |
+  TokenExt AlexPosn         |
   TokenVar AlexPosn         |
   TokenUnite AlexPosn       |
   TokenPreach AlexPosn      | 
@@ -51,14 +51,14 @@ data Token =
   TokenLB AlexPosn          |
   TokenRB AlexPosn          |
   TokenInt AlexPosn Int     |
-  TokenWord AlexPosn String
+  TokenWord AlexPosn String 
   deriving (Eq,Show)
 
 tokenPosn :: Token -> String
 tokenPosn (TokenLoad (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAssign  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTxt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenCsv  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenExt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnite  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPreach (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

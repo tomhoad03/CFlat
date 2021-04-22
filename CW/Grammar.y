@@ -11,7 +11,7 @@ import Tokens
 	load	 { TokenLoad   _  }
 	'='	     { TokenAssign _  }
 	'"'	     { TokenTxt    _  } -- How to tell where speech marks start and end.
-	'.csv'   { TokenCsv    _  } -- csv file extension
+	'.csv'   { TokenExt    _  } -- csv file extension
 	var	     { TokenVar    _  }
 	unite    { TokenUnite  _  }
 	preach   { TokenPreach _  }
@@ -31,11 +31,12 @@ import Tokens
 	
 %%
 
-Exp : int                               { TmInt $1 }
-    | word                              { TmWord $1 }
-	| load word '=' '"' word '.csv' '"' { TmLoad $2 $5 }
-    | var word '=' Exp                  { TmVar $2 $4 }
-	| select '(' Exps ')'               { TmSelect $3 } --need to reduce to only 'Of's
+Exp : int                                   { TmInt $1 }
+    | word                                  { TmWord $1 }
+	| load word '=' '"' word '.csv' '"' Exp { TmLoad $2 $5 $8 }
+    | var word '=' Exp Exp                  { TmVar $2 $4 $5 }
+	| select '(' Exps ')' Exp               { TmSelect $3 $5 } --need to reduce to only 'Of's
+	| preach word                           { TmPreach $2 }
 	  
 Exps : Exp { [$1] }
      | Exps ',' Exp { $3 : $1 }
@@ -45,8 +46,9 @@ parseError :: [Token] -> a
 parseError [] = error "Parse Error" 
 data Exp = TmInt Int
          | TmWord String
-		 | TmLoad String String
-         | TmVar String Exp
-		 | TmSelect [Exp]
+		 | TmLoad String String Exp
+         | TmVar String Exp Exp
+		 | TmSelect [Exp] Exp
+		 | TmPreach String
          deriving Show 
 } 

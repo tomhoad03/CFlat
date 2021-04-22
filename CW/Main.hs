@@ -7,6 +7,7 @@ import System.Environment ( getArgs )
 import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
+import System.IO.Unsafe (unsafePerformIO)
 
 -- ghc -o Main Main.hs
 -- ./Main pr1.cql
@@ -35,7 +36,7 @@ errorCall e = do let err = show e
 
 -- solve the programs
 solver :: Exp -> IO ()
-solver parsedFile = do putStrLn (interpreter parsedFile)
+solver parsedFile = do putStrLn (interpreter parsedFile [["Hello", "World"], ["Haskell", "Java"]])
 
 -- parses a csv file
 readCsv :: String -> IO [String]
@@ -44,8 +45,11 @@ readCsv fileName = do a <- readFile (fileName ++ ".csv")
                       return csv
 
 -- interpret the parsed file
-interpreter :: Exp -> String
-interpreter (TmInt a) = show a
-interpreter (TmWord a) = a
-interpreter (TmLoad a b) = "load " ++ a ++ " = " ++ b ++ ".csv"
-interpreter (TmVar a b) = a ++ " = " ++ interpreter b
+interpreter :: Exp -> [[String]] -> String
+interpreter (TmInt a) xs = show a
+interpreter (TmWord a) xs = a
+interpreter (TmLoad a b c) xs = do let contents = readFile (b ++ ".csv")
+                                   let splitContents = lines $ unsafePerformIO contents
+                                   "load " ++ a ++ " = " ++ b ++ ".csv" ++ interpreter c (xs ++ [splitContents])
+interpreter (TmVar a b c) xs = a ++ " = " ++ interpreter b xs ++ interpreter c xs
+interpreter (TmPreach a) xs = show $ last xs
