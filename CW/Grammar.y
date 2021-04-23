@@ -31,11 +31,11 @@ import Tokens
 	
 %%
 
-Exp : int                                   { TmInt $1 }
-    | word                                  { TmWord $1 }
-	| load word '=' '"' word '.csv' '"' Exp { TmLoad $2 $5 $8 }
+Exp : load word '=' '"' word '.csv' '"' Exp { TmLoad $2 $5 $8 }
     | var word '=' Exp Exp                  { TmVar $2 $4 $5 }
-	| select '(' Exps ')' Exp               { TmSelect $3 $5 } --need to reduce to only 'Of's
+	| select word                           { Tm1Select $2 }
+	| select '(' Exps ')' Exp               { Tm2Select $3 $5 } --need to reduce to only 'Of's
+	| unite word word                       { TmUnite $2 $3 }
 	| preach word                           { TmPreach $2 }
 	  
 Exps : Exp { [$1] }
@@ -44,11 +44,11 @@ Exps : Exp { [$1] }
 { 
 parseError :: [Token] -> a
 parseError [] = error "Parse Error" 
-data Exp = TmInt Int
-         | TmWord String
-		 | TmLoad String String Exp
+data Exp = TmLoad String String Exp
          | TmVar String Exp Exp
-		 | TmSelect [Exp] Exp
+		 | Tm1Select String
+		 | Tm2Select [Exp] Exp
+		 | TmUnite String String
 		 | TmPreach String
          deriving Show 
 } 

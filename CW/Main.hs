@@ -12,6 +12,8 @@ import System.IO.Unsafe (unsafePerformIO)
 -- ghc -o Main Main.hs
 -- ./Main pr1.cql
 
+-- csvs stored as [("X", ["Hello", "World"]), ("Y", ["Haskell", "Java"])]
+
 -- read in the program from the cmd args
 main :: IO ()
 main = do (fileName : _) <- getArgs
@@ -34,9 +36,10 @@ errorCall e = do let err = show e
                  hPutStr stderr ("Error: " ++ err)
                  return ()
 
--- solve the programs
+-- solve a program
 solver :: Exp -> IO ()
-solver parsedFile = do putStrLn (interpreter parsedFile [["Hello", "World"], ["Haskell", "Java"]])
+solver parsedFile = do let result = interpreter parsedFile []
+                       mapM_ putStrLn result 
 
 -- parses a csv file
 readCsv :: String -> IO [String]
@@ -45,11 +48,25 @@ readCsv fileName = do a <- readFile (fileName ++ ".csv")
                       return csv
 
 -- interpret the parsed file
-interpreter :: Exp -> [[String]] -> String
-interpreter (TmInt a) xs = show a
-interpreter (TmWord a) xs = a
-interpreter (TmLoad a b c) xs = do let contents = readFile (b ++ ".csv")
-                                   let splitContents = lines $ unsafePerformIO contents
-                                   "load " ++ a ++ " = " ++ b ++ ".csv" ++ interpreter c (xs ++ [splitContents])
-interpreter (TmVar a b c) xs = a ++ " = " ++ interpreter b xs ++ interpreter c xs
-interpreter (TmPreach a) xs = show $ last xs
+interpreter :: Exp -> [(String, [String])] -> [String]
+
+interpreter (TmLoad a b c) csvs = do let contents = readFile (b ++ ".csv")
+                                     let splitContents = lines $ unsafePerformIO contents -- kinda illegal
+                                     interpreter c (csvs ++ [(b, splitContents)])
+
+interpreter (TmVar a b c) csvs = do let selection = interpreter b csvs
+                                    interpreter c (csvs ++ [(a, selection)])
+
+interpreter (Tm1Select a) csvs = readMaybe (lookup a csvs) -- selection as simple assignment
+
+interpreter (TmUnite a b) csvs = do aCsv <- readMaybe (lookup a csvs)
+                                    bCsv <- readMaybe (lookup b csvs)
+                                    return (aCsv ++ "," ++ bCsv)
+                                    
+interpreter (TmPreach a) csvs = readMaybe (lookup a csvs) -- end of program
+
+
+-- read maybe (used for lookups)
+readMaybe :: Maybe p -> p
+readMaybe (Just a) = a
+readMaybe Nothing = error "Nothing"

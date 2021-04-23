@@ -1,2 +1,8 @@
+=D Comment Test
+
 load A = "A.csv"
-preach A
+load B = "B.csv"
+
+var C = unite A B
+
+preach C
