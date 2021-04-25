@@ -9,24 +9,29 @@ $alpha = [a-zA-Z]
 tokens :-
 	$white+  ;
   "=D".*   ;
-  load	   { \p s -> TokenLoad p   }
-	=	       { \p s -> TokenAssign p }
-	\"	     { \p s -> TokenTxt p    } -- How to tell where speech marks start and end.
-  \.csv    { \p s -> TokenExt p    } -- csv file extension
-	var	     { \p s -> TokenVar p    }
-	unite    { \p s -> TokenUnite p  }
-	preach   { \p s -> TokenPreach p }
-	select   { \p s -> TokenSelect p }
-	where    { \p s -> TokenWhere p  }
-	of       { \p s -> TokenOf p     }
-	arrange  { \p s -> TokenArr p    }
-	asc      { \p s -> TokenAsc p    }
-	desc     { \p s -> TokenDesc p   }
-	nullCase { \p s -> TokenNC p     }
-	\,       { \p s -> TokenCom p    }
-	"=="     { \p s -> TokenEq p     }
-	\(       { \p s -> TokenLB p     }
-	\)       { \p s -> TokenRB p     }
+  load	   { \p s -> TokenLoad p    }
+	=	       { \p s -> TokenAssign p  }
+	\"	     { \p s -> TokenTxt p     } -- How to tell where speech marks start and end.
+  \.csv    { \p s -> TokenExt p     } -- csv file extension
+	var	     { \p s -> TokenVar p     }
+	unite    { \p s -> TokenUnite p   }
+	preach   { \p s -> TokenPreach p  }
+	select   { \p s -> TokenSelect p  }
+	where    { \p s -> TokenWhere p   }
+	of       { \p s -> TokenOf p      }
+	arrange  { \p s -> TokenArr p     }
+	asc      { \p s -> TokenAsc p     }
+	desc     { \p s -> TokenDesc p    }
+	nullCase { \p s -> TokenNC p      }
+	\,       { \p s -> TokenCom p     }
+	\==      { \p s -> TokenEq p      }
+  \>=      { \p s -> TokenGreatEq p }
+  \<=      { \p s -> TokenLessEq p  }
+  \>       { \p s -> TokenGreat p   }
+  \<       { \p s -> TokenLess p    }
+  \!=      { \p s -> TokenNotEq p   }
+	\(       { \p s -> TokenLB p      }
+	\)       { \p s -> TokenRB p      }
 	$digit+  { \p s -> TokenInt p (read s)  }
 	$alpha [$alpha $digit \_ \’]*   { \p s -> TokenWord p s }
 	
@@ -48,6 +53,11 @@ data Token =
   TokenNC AlexPosn          |
   TokenCom AlexPosn         |
   TokenEq AlexPosn          |
+  TokenGreatEq AlexPosn     |
+  TokenLessEq AlexPosn      |
+  TokenGreat AlexPosn       |
+  TokenLess AlexPosn        |
+  TokenNotEq AlexPosn       |
   TokenLB AlexPosn          |
   TokenRB AlexPosn          |
   TokenInt AlexPosn Int     |
@@ -71,6 +81,11 @@ tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNC (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenCom  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenGreatEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLessEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenGreat  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLess  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenNotEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
