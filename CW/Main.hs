@@ -8,7 +8,7 @@ import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List ( sort, elemIndex, elemIndices, intercalate, transpose )
+import Data.List ( sort, elemIndex, elemIndices, intercalate, transpose, delete )
 
 -- alex Tokens.x
 -- happy Grammar.y
@@ -57,9 +57,9 @@ solver parsedFile = do let result = interpreter parsedFile []
 
 -- read csv from list of loaded csvs
 readCsv :: Eq a => a -> [(a, p)] -> p
-readCsv a csvs = readMaybe (lookup a csvs)
-                   where readMaybe (Just a) = a
-                         readMaybe Nothing = error "Nothing"
+readCsv csvName csvs = readMaybe (lookup csvName csvs)
+                         where readMaybe (Just a) = a
+                               readMaybe Nothing = error "Nothing"
 
 
 -- break a csv into its columns
@@ -73,19 +73,23 @@ commaSplit xs s = readMaybe (elemIndex ',' s)
 -- interpret the parsed file
 interpreter :: Exp -> [(String, [String])] -> [String]
 
--- load A = "A.csv"
+-- load a table
+-- 'load A = "A.csv"'
 interpreter (TmLoad varName csvName program) csvs = do let contents = readFile (csvName ++ ".csv")
                                                        let splitContents = lines $ unsafePerformIO contents -- kinda illegal
                                                        interpreter program (csvs ++ [(varName, splitContents)])
 
--- var C = ...
+-- variable assignment
+-- 'var C = ...'
 interpreter (TmVar varName csvName program) csvs = do let selection = interpreter csvName csvs
                                                       interpreter program (csvs ++ [(varName, selection)])
 
--- select all of A
-interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simple assignment
+-- select all cols from a table
+-- 'select all of A'
+interpreter (Tm1Select csvName) csvs = readCsv csvName csvs
 
--- select (1, 2) of A
+-- select certain cols from a table
+-- 'select (1, 2) of A'
 interpreter (Tm2Select cols csvName) csvs = do let csv = readCsv csvName csvs
                                                let splitCsv = map (commaSplit []) csv
                                                let intCols = readCols cols []
@@ -93,11 +97,13 @@ interpreter (Tm2Select cols csvName) csvs = do let csv = readCsv csvName csvs
                                                  where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
                                                        readCols (TmCol x) xs = [x - 1]
 
--- select all of A where (1 == 2)
+-- select all cols from a table where certain cols match a condition
+-- 'select all of A where (1 == 2)'
 interpreter (Tm3Select csvName wheres) csvs = do let csv = readCsv csvName csvs
                                                  whereInterpreter csv wheres
 
--- select (1, 2) of A where (1 == 2)
+-- select certain cols from a table where certain cols match a condition
+-- 'select (1, 2) of A where (1 == 2)'
 interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName csvs
                                                       let whereCsv = whereInterpreter csv wheres
                                                       let splitCsv = map (commaSplit []) whereCsv
@@ -106,24 +112,37 @@ interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName 
                                                         where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
                                                               readCols (TmCol x) xs = [x - 1]
 
-                                                      
--- unite A B
-interpreter (TmUnite a b) csvs = do let aCsv = readCsv a csvs
-                                    let bCsv = readCsv b csvs
-                                    concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
+-- sort a table lexicographically
+-- 'arrange A asc'
+interpreter (Tm1Arrange csvName program) csvs = do let csv = readCsv csvName csvs
+                                                   let sortedCsv = sort csv
+                                                   interpreter program (delete (csvName, csv) csvs ++ [(csvName, sortedCsv)])
 
--- preach C                    
-interpreter (TmPreach a) csvs = sort $ readCsv a csvs -- end of program, output sorted lexicographically
+-- sort a table reverse lexicographically
+ -- 'arrange A desc'
+interpreter (Tm2Arrange csvName program) csvs = do let csv = readCsv csvName csvs
+                                                   let sortedCsv = reverse $ sort csv
+                                                   interpreter program (delete (csvName, csv) csvs ++ [(csvName, sortedCsv)])                            
+
+-- merge two tables (for each, for each merge)
+-- 'unite A B'
+interpreter (TmUnite csvNameA csvNameB) csvs = do let aCsv = readCsv csvNameA csvs
+                                                  let bCsv = readCsv csvNameB csvs
+                                                  concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
+
+-- output a table
+-- 'preach C'                   
+interpreter (TmPreach csvName) csvs = readCsv csvName csvs
 
 
 
 -- filter a csv
 whereInterpreter :: [String] -> Wheres -> [String]
 
--- breaking down conditions
+-- breaking down where conditions
 whereInterpreter csv (Tm1Where where1 where2) = whereInterpreter (whereInterpreter csv where1) where2
 
--- base cases
+-- filter cases
 whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
                                  map (intercalate ",") (filterCsv splitCsv wheres)
                                    where filterCsv splitCsv (Tm2Where a b) = filter (\x -> x !! (a - 1) == x !! (b - 1)) splitCsv
@@ -132,6 +151,4 @@ whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
                                          filterCsv splitCsv (Tm5Where a b) = filter (\x -> x !! (a - 1) > x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) splitCsv
-
-test :: Bool
-test = "Hello" == "Hello"
+                                         filterCsv splitCsv (Tm8Where a) = filter (\x -> x !! (a - 1) /= []) splitCsv

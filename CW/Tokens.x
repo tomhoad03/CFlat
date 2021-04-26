@@ -24,6 +24,7 @@ tokens :-
 	asc      { \p s -> TokenAsc p     }
 	desc     { \p s -> TokenDesc p    }
 	nullCase { \p s -> TokenNC p      }
+  notnull  { \p s -> TokenNN p      }
 	\,       { \p s -> TokenCom p     }
 	\==      { \p s -> TokenEq p      }
   \>=      { \p s -> TokenGreatEq p }
@@ -53,6 +54,7 @@ data Token =
   TokenAsc AlexPosn         |
   TokenDesc AlexPosn        | 
   TokenNC AlexPosn          |
+  TokenNN AlexPosn          |
   TokenCom AlexPosn         |
   TokenEq AlexPosn          |
   TokenGreatEq AlexPosn     |
@@ -82,6 +84,7 @@ tokenPosn (TokenArr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenAsc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDesc (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNC (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenNN (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenCom  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGreatEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

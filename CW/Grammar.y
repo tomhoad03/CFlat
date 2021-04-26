@@ -23,6 +23,7 @@ import Tokens
 	asc      { TokenAsc     _  }
 	desc     { TokenDesc    _  }
 	nullCase { TokenNC      _  }
+	notnull  { TokenNN      _  }
 	','      { TokenCom     _  }
 	'=='     { TokenEq      _  }
 	'>='     { TokenGreatEq _  }
@@ -44,6 +45,8 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
 	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
 	| unite word word                                  { TmUnite $2 $3 }
+	| arrange word asc Exp                             { Tm1Arrange $2 $4 }
+	| arrange word desc Exp                            { Tm2Arrange $2 $4 }
 	| preach word                                      { TmPreach $2 }
 
 Cols : Cols ',' Cols          { TmCols $1 $3 }
@@ -56,6 +59,7 @@ Wheres : Wheres ',' Wheres    { Tm1Where $1 $3 }
 	   | int '>' int          { Tm5Where $1 $3 }
 	   | int '<' int          { Tm6Where $1 $3 }
 	   | int '!=' int         { Tm7Where $1 $3 }
+	   | int '==' notnull     { Tm8Where $1 }
 
 { 
 parseError :: [Token] -> a
@@ -68,6 +72,8 @@ data Exp = TmLoad String String Exp
 		 | Tm3Select String Wheres
 		 | Tm4Select Cols String Wheres
 		 | TmUnite String String
+		 | Tm1Arrange String Exp
+		 | Tm2Arrange String Exp
 		 | TmPreach String
          deriving Show 
 
@@ -82,5 +88,6 @@ data Wheres = Tm1Where Wheres Wheres
 		    | Tm5Where Int Int
 		    | Tm6Where Int Int
 		    | Tm7Where Int Int
+			| Tm8Where Int
 		    deriving Show
 }
