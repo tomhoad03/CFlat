@@ -37,12 +37,17 @@ import Tokens
 	
 %%
 
-Exp : load word '=' '"' word '.csv' '"' Exp    { TmLoad $2 $5 $8 }
-    | var word '=' Exp Exp                     { TmVar $2 $4 $5 }
-	| select word                              { Tm1Select $2 }
-	| select all of word where '(' Wheres ')'  { Tm2Select $4 $7 }
-	| unite word word                          { TmUnite $2 $3 }
-	| preach word                              { TmPreach $2 }
+Exp : load word '=' '"' word '.csv' '"' Exp      { TmLoad $2 $5 $8 }
+    | var word '=' Exp Exp                       { TmVar $2 $4 $5 }
+	| select all of word                         { Tm1Select $4 }
+	| select '(' Cols ')' of word                { Tm2Select $3 $6 }
+	| select all of word where '(' Wheres ')'    { Tm3Select $4 $7 }
+	| select '(' Cols ')' of word '(' Wheres ')' { Tm4Select $3 $6 $8 }
+	| unite word word                            { TmUnite $2 $3 }
+	| preach word                                { TmPreach $2 }
+
+Cols : Cols ',' Cols          { TmCols $1 $3 }
+     | int                    { TmCol $1 }
 
 Wheres : Wheres ',' Wheres    { Tm1Where $1 $3 }
        | int '==' int         { Tm2Where $1 $3 }
@@ -59,10 +64,16 @@ parseError [] = error "Parse Error"
 data Exp = TmLoad String String Exp
          | TmVar String Exp Exp
 		 | Tm1Select String
-		 | Tm2Select String Wheres
+		 | Tm2Select Cols String
+		 | Tm3Select String Wheres
+		 | Tm4Select Cols String Wheres
 		 | TmUnite String String
 		 | TmPreach String
          deriving Show 
+
+data Cols = TmCols Cols Cols
+          | TmCol Int
+		  deriving Show
 
 data Wheres = Tm1Where Wheres Wheres
             | Tm2Where Int Int
