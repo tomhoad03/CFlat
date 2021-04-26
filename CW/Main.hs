@@ -82,6 +82,7 @@ interpreter (TmLoad varName csvName program) csvs = do let contents = readFile (
 interpreter (TmVar varName csvName program) csvs = do let selection = interpreter csvName csvs
                                                       interpreter program (csvs ++ [(varName, selection)])
 
+-- !!!!!maybe add | Cols nullCase Cols     { TmNullCase $1 $3 }  for NullCase!!!!!!
 -- select all of A
 interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simple assignment
 
@@ -113,10 +114,22 @@ interpreter (TmUnite a b) csvs = do let aCsv = readCsv a csvs
                                     concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
 
 -- preach C                    
-interpreter (TmPreach a) csvs = sort $ readCsv a csvs -- end of program, output sorted lexicographically
+interpreter (TmPreach a) csvs = readCsv a csvs -- end of program, output sorted lexicographically
 
+-- arrange asc 1
+--interpreter (TmArr1 a b) csvs = do let csv = readCsv a csvs
+--                                 let splitCsv = map (commaSplit []) csv
+--                                 map (intercalate ",") (transpose (sort splitCsv))
 
+-- arrange desc 1
+--interpreter (TmArr2 a b) csvs = reverse $ sort $ readCsv a csvs
 
+-- append (A C)
+interpreter (TmApp1 a b) csvs = readCsv a csvs ++ readCsv b csvs
+
+-- append (A "0")
+interpreter (TmApp2 a b) csvs = readCsv a csvs ++ [b]
+ 
 -- filter a csv
 whereInterpreter :: [String] -> Wheres -> [String]
 
@@ -132,6 +145,7 @@ whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
                                          filterCsv splitCsv (Tm5Where a b) = filter (\x -> x !! (a - 1) > x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm8Where a) = filter (\x -> x !! (a - 1) /= "") splitCsv
 
 test :: Bool
 test = "Hello" == "Hello"
