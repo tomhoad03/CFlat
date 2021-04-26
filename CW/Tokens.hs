@@ -13928,15 +13928,15 @@ alex_actions = array (0 :: Int, 80)
   ]
 
 {-# LINE 42 "Tokens.x" #-}
- 
-data Token = 
+
+data Token =
   TokenLoad AlexPosn        |
   TokenAssign AlexPosn      |
   TokenTxt AlexPosn         |
   TokenExt AlexPosn         |
   TokenVar AlexPosn         |
   TokenUnite AlexPosn       |
-  TokenPreach AlexPosn      | 
+  TokenPreach AlexPosn      |
   TokenSelect AlexPosn      |
   TokenAll AlexPosn         |
   TokenWhere AlexPosn       |
@@ -13944,7 +13944,7 @@ data Token =
   TokenArr AlexPosn         |
   TokenApp AlexPosn         |
   TokenAsc AlexPosn         |
-  TokenDesc AlexPosn        | 
+  TokenDesc AlexPosn        |
   TokenNC AlexPosn          |
   TokenNN AlexPosn          |
   TokenCom AlexPosn         |

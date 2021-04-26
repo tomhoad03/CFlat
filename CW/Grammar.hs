@@ -574,7 +574,7 @@ data Exp = TmLoad String String Exp
          | TmApp1 String String
          | TmApp2 String String
 		 | TmPreach String
-         deriving Show 
+         deriving Show
 
 data Cols = TmCols Cols Cols
           | TmCol Int
@@ -587,7 +587,8 @@ data Wheres = Tm1Where Wheres Wheres
 		    | Tm5Where Int Int
 		    | Tm6Where Int Int
 		    | Tm7Where Int Int
-            | Tm8Where Int
+        | Tm8Where Int
+
 		    deriving Show
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
