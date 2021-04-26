@@ -17,6 +17,7 @@ tokens :-
 	unite    { \p s -> TokenUnite p   }
 	preach   { \p s -> TokenPreach p  }
 	select   { \p s -> TokenSelect p  }
+  all      { \p s -> TokenAll p     }
 	where    { \p s -> TokenWhere p   }
 	of       { \p s -> TokenOf p      }
 	arrange  { \p s -> TokenArr p     }
@@ -45,6 +46,7 @@ data Token =
   TokenUnite AlexPosn       |
   TokenPreach AlexPosn      | 
   TokenSelect AlexPosn      |
+  TokenAll AlexPosn         |
   TokenWhere AlexPosn       |
   TokenOf AlexPosn          |
   TokenArr AlexPosn         |
@@ -73,6 +75,7 @@ tokenPosn (TokenVar  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnite  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPreach (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAll (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWhere (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOf (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenArr (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

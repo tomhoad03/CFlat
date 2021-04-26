@@ -1,7 +1,7 @@
 module Main where
 
 import Tokens ( Token, alexScanTokens )
-import Grammar ( parseCFlat, Exp(..), Ofs(..))
+import Grammar ( parseCFlat, Exp(..), Wheres(..))
 import System.IO ( stderr, hPutStr )
 import System.Environment ( getArgs )
 import System.FilePath ( takeExtension, splitExtension )
@@ -85,18 +85,14 @@ interpreter (TmVar a b c) csvs = do let selection = interpreter b csvs
 -- select A
 interpreter (Tm1Select a) csvs = readCsv a csvs -- selection as simple assignment
 
+-- select (...) of A where (1 == 2)
+interpreter (Tm2Select a b) csvs = do let csv = readCsv a csvs
+                                      whereInterpreter csv b
+                                      
 -- unite A B
-interpreter (Tm1Unite a b) csvs = do let aCsv = readCsv a csvs
-                                     let bCsv = readCsv b csvs
-                                     concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
-
--- unite A B where (1 of A >= 1 of B)                         
-interpreter (Tm2Unite a b c) csvs = do let aCsv = readCsv a csvs
-                                       let bCsv = readCsv b csvs
-                                       let cCsv = concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
-                                       let cols = map (\x -> a ++ show x) [1..(1 + length (filter (== ',') $ head aCsv))] -- column header names
-                                                  ++ map (\x -> b ++ show x) [1..(1 + length (filter (== ',') $ head bCsv))]
-                                       whereInterpreter cCsv cols c
+interpreter (TmUnite a b) csvs = do let aCsv = readCsv a csvs
+                                    let bCsv = readCsv b csvs
+                                    concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
 
 -- preach C                    
 interpreter (TmPreach a) csvs = sort $ readCsv a csvs -- end of program, output sorted lexicographically
@@ -104,35 +100,17 @@ interpreter (TmPreach a) csvs = sort $ readCsv a csvs -- end of program, output 
 
 
 -- filter a csv
-whereInterpreter :: [String] -> [String] -> Ofs -> [String]
+whereInterpreter :: [String] -> Wheres -> [String]
 
 -- breaking down conditions
-whereInterpreter csv cols (Tm1Of a b) = whereInterpreter (whereInterpreter csv cols a) cols b
+whereInterpreter csv (Tm1Where a b) = whereInterpreter (whereInterpreter csv a) b
 
 -- base cases
-whereInterpreter csv cols c = do let splitCsv = map (commaSplit []) csv
-                                 map (intercalate ",") (filterCsv splitCsv cols c)
-                                   where filterCsv splitCsv cols (Tm2Of p q r s) = filter (\x -> x !! a == x !! b) splitCsv
-                                          where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols
-                                         filterCsv splitCsv cols (Tm3Of p q r s) = filter (\x -> x !! a >= x !! b) splitCsv
-                                           where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols
-                                         filterCsv splitCsv cols (Tm4Of p q r s) = filter (\x -> x !! a <= x !! b) splitCsv
-                                           where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols
-                                         filterCsv splitCsv cols (Tm5Of p q r s) = filter (\x -> x !! a > x !! b) splitCsv
-                                           where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols
-                                         filterCsv splitCsv cols (Tm6Of p q r s) = filter (\x -> x !! a < x !! b) splitCsv
-                                           where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols
-                                         filterCsv splitCsv cols (Tm7Of p q r s) = filter (\x -> x !! a /= x !! b) splitCsv
-                                           where
-                                               a = head $ elemIndices (q ++ show p) cols
-                                               b = head $ elemIndices (s ++ show r) cols 
+whereInterpreter csv c = do let splitCsv = map (commaSplit []) csv
+                            map (intercalate ",") (filterCsv splitCsv c)
+                              where filterCsv splitCsv (Tm2Where p q) = filter (\x -> x !! p == x !! q) splitCsv
+                                    filterCsv splitCsv (Tm3Where p q) = filter (\x -> x !! p >= x !! q) splitCsv
+                                    filterCsv splitCsv (Tm4Where p q) = filter (\x -> x !! p <= x !! q) splitCsv
+                                    filterCsv splitCsv (Tm5Where p q) = filter (\x -> x !! p > x !! q) splitCsv
+                                    filterCsv splitCsv (Tm6Where p q) = filter (\x -> x !! p < x !! q) splitCsv
+                                    filterCsv splitCsv (Tm7Where p q) = filter (\x -> x !! p /= x !! q) splitCsv

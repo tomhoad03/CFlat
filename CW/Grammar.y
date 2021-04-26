@@ -16,6 +16,7 @@ import Tokens
 	unite    { TokenUnite   _  }
 	preach   { TokenPreach  _  }
 	select   { TokenSelect  _  }
+	all      { TokenAll     _  }
 	where    { TokenWhere   _  }
 	of       { TokenOf      _  }
 	arrange  { TokenArr     _  }
@@ -36,24 +37,20 @@ import Tokens
 	
 %%
 
-Exp : load word '=' '"' word '.csv' '"' Exp { TmLoad $2 $5 $8 }
-    | var word '=' Exp Exp                  { TmVar $2 $4 $5 }
-	| select word                           { Tm1Select $2 }
-	| select '(' Ofs ')' Exp                { Tm2Select $3 $5 } --need to reduce to only 'Of's
-	| unite word word                       { Tm1Unite $2 $3 }
-	| unite word word where '(' Ofs ')'     { Tm2Unite $2 $3 $6 }
-	| preach word                           { TmPreach $2 }
-	  
-Exps : Exp { [$1] }
-     | Exps ',' Exp { $3 : $1 }
+Exp : load word '=' '"' word '.csv' '"' Exp    { TmLoad $2 $5 $8 }
+    | var word '=' Exp Exp                     { TmVar $2 $4 $5 }
+	| select word                              { Tm1Select $2 }
+	| select all of word where '(' Wheres ')'  { Tm2Select $4 $7 }
+	| unite word word                          { TmUnite $2 $3 }
+	| preach word                              { TmPreach $2 }
 
-Ofs : Ofs ',' Ofs                  { Tm1Of $1 $3 }
-    | int of word '==' int of word { Tm2Of $1 $3 $5 $7 }
-	| int of word '>=' int of word { Tm3Of $1 $3 $5 $7 }
-	| int of word '<=' int of word { Tm4Of $1 $3 $5 $7 }
-	| int of word '>' int of word  { Tm5Of $1 $3 $5 $7 }
-	| int of word '<' int of word  { Tm6Of $1 $3 $5 $7 }
-	| int of word '!=' int of word { Tm7Of $1 $3 $5 $7 }
+Wheres : Wheres ',' Wheres    { Tm1Where $1 $3 }
+       | int '==' int         { Tm2Where $1 $3 }
+	   | int '>=' int         { Tm3Where $1 $3 }
+	   | int '<=' int         { Tm4Where $1 $3 }
+	   | int '>' int          { Tm5Where $1 $3 }
+	   | int '<' int          { Tm6Where $1 $3 }
+	   | int '!=' int         { Tm7Where $1 $3 }
 
 { 
 parseError :: [Token] -> a
@@ -62,18 +59,17 @@ parseError [] = error "Parse Error"
 data Exp = TmLoad String String Exp
          | TmVar String Exp Exp
 		 | Tm1Select String
-		 | Tm2Select Ofs Exp
-		 | Tm1Unite String String
-		 | Tm2Unite String String Ofs
+		 | Tm2Select String Wheres
+		 | TmUnite String String
 		 | TmPreach String
          deriving Show 
 
-data Ofs = Tm1Of Ofs Ofs
-         | Tm2Of Int String Int String
-		 | Tm3Of Int String Int String
-		 | Tm4Of Int String Int String
-		 | Tm5Of Int String Int String
-		 | Tm6Of Int String Int String
-		 | Tm7Of Int String Int String
-		 deriving Show
+data Wheres = Tm1Where Wheres Wheres
+            | Tm2Where Int Int
+		    | Tm3Where Int Int
+		    | Tm4Where Int Int
+		    | Tm5Where Int Int
+		    | Tm6Where Int Int
+		    | Tm7Where Int Int
+		    deriving Show
 }
