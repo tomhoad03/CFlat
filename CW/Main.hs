@@ -8,12 +8,12 @@ import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List ( sort, elemIndex, elemIndices, intercalate )
+import Data.List ( sort, elemIndex, elemIndices, intercalate, transpose )
 
 -- alex Tokens.x
 -- happy Grammar.y
 -- ghc -o csvql Main.hs
--- ./csvql pr1.cql
+-- ./csvql pr1.cql (exclude the ./ for a regular terminal)
 
 -- csvs stored as [("X", ["Hello", "World"]), ("Y", ["Haskell", "Java"])]
 
@@ -51,7 +51,7 @@ errorCall e = do let err = show e
 solver :: Exp -> IO ()
 solver parsedFile = do let result = interpreter parsedFile []
                        mapM_ putStrLn result
-                       print result
+                       -- print result
 
 
 
@@ -74,23 +74,24 @@ commaSplit xs s = readMaybe (elemIndex ',' s)
 interpreter :: Exp -> [(String, [String])] -> [String]
 
 -- load A = "A.csv"
-interpreter (TmLoad a b c) csvs = do let contents = readFile (b ++ ".csv")
-                                     let splitContents = lines $ unsafePerformIO contents -- kinda illegal
-                                     interpreter c (csvs ++ [(b, splitContents)])
+interpreter (TmLoad varName csvName program) csvs = do let contents = readFile (csvName ++ ".csv")
+                                                       let splitContents = lines $ unsafePerformIO contents -- kinda illegal
+                                                       interpreter program (csvs ++ [(varName, splitContents)])
 
 -- var C = ...
-interpreter (TmVar a b c) csvs = do let selection = interpreter b csvs
-                                    interpreter c (csvs ++ [(a, selection)])
+interpreter (TmVar varName csvName program) csvs = do let selection = interpreter csvName csvs
+                                                      interpreter program (csvs ++ [(varName, selection)])
 
 -- select all of A
 interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simple assignment
 
 -- select (1, 2) of A
 interpreter (Tm2Select cols csvName) csvs = do let csv = readCsv csvName csvs
+                                               let splitCsv = map (commaSplit []) csv
                                                let intCols = readCols cols []
-                                               map (\x -> map (!! x) csv) intCols
+                                               map (intercalate ",") (transpose (map (\x -> map (!! x) splitCsv) intCols))
                                                  where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
-                                                       readCols (TmCol x) xs = [x]
+                                                       readCols (TmCol x) xs = [x - 1]
 
 -- select all of A where (1 == 2)
 interpreter (Tm3Select csvName wheres) csvs = do let csv = readCsv csvName csvs
@@ -99,12 +100,13 @@ interpreter (Tm3Select csvName wheres) csvs = do let csv = readCsv csvName csvs
 -- select (1, 2) of A where (1 == 2)
 interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName csvs
                                                       let whereCsv = whereInterpreter csv wheres
-                                                      let splitCsv = map (commaSplit []) csv
+                                                      let splitCsv = map (commaSplit []) whereCsv
                                                       let intCols = readCols cols []
-                                                      map (intercalate "," . (\x -> map (!! x) splitCsv)) intCols
+                                                      map (intercalate ",") (transpose (map (\x -> map (!! x) splitCsv) intCols))
                                                         where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
-                                                              readCols (TmCol x) xs = [x]
+                                                              readCols (TmCol x) xs = [x - 1]
 
+                                                      
 -- unite A B
 interpreter (TmUnite a b) csvs = do let aCsv = readCsv a csvs
                                     let bCsv = readCsv b csvs
@@ -124,9 +126,12 @@ whereInterpreter csv (Tm1Where where1 where2) = whereInterpreter (whereInterpret
 -- base cases
 whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
                                  map (intercalate ",") (filterCsv splitCsv wheres)
-                                   where filterCsv splitCsv (Tm2Where a b) = filter (\x -> x !! a == x !! b) splitCsv
-                                         filterCsv splitCsv (Tm3Where a b) = filter (\x -> x !! a >= x !! b) splitCsv
-                                         filterCsv splitCsv (Tm4Where a b) = filter (\x -> x !! a <= x !! b) splitCsv
-                                         filterCsv splitCsv (Tm5Where a b) = filter (\x -> x !! a > x !! b) splitCsv
-                                         filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! a < x !! b) splitCsv
-                                         filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! a /= x !! b) splitCsv
+                                   where filterCsv splitCsv (Tm2Where a b) = filter (\x -> x !! (a - 1) == x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm3Where a b) = filter (\x -> x !! (a - 1) >= x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm4Where a b) = filter (\x -> x !! (a - 1) <= x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm5Where a b) = filter (\x -> x !! (a - 1) > x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) splitCsv
+                                         filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) splitCsv
+
+test :: Bool
+test = "Hello" == "Hello"

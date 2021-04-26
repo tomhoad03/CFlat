@@ -37,14 +37,14 @@ import Tokens
 	
 %%
 
-Exp : load word '=' '"' word '.csv' '"' Exp      { TmLoad $2 $5 $8 }
-    | var word '=' Exp Exp                       { TmVar $2 $4 $5 }
-	| select all of word                         { Tm1Select $4 }
-	| select '(' Cols ')' of word                { Tm2Select $3 $6 }
-	| select all of word where '(' Wheres ')'    { Tm3Select $4 $7 }
-	| select '(' Cols ')' of word '(' Wheres ')' { Tm4Select $3 $6 $8 }
-	| unite word word                            { TmUnite $2 $3 }
-	| preach word                                { TmPreach $2 }
+Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
+    | var word '=' Exp Exp                             { TmVar $2 $4 $5 }
+	| select all of word                               { Tm1Select $4 }
+	| select '(' Cols ')' of word                      { Tm2Select $3 $6 }
+	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
+	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
+	| unite word word                                  { TmUnite $2 $3 }
+	| preach word                                      { TmPreach $2 }
 
 Cols : Cols ',' Cols          { TmCols $1 $3 }
      | int                    { TmCol $1 }

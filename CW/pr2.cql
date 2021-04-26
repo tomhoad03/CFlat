@@ -1,4 +1,7 @@
- Load A = "A.csv"
- Var C = Select (3, 1) of A Where (1 == 2)
- Arrange A Asc
- Preach C
+load A = "C.csv"
+
+var C = select (3, 1) of A where (1 == 2)
+ 
+=D arrange A asc
+
+preach C
