@@ -38,16 +38,16 @@ tokens :-
 	$digit+  { \p s -> TokenInt p (read s)  }
 	$alpha [$alpha $digit \_ \’]*   { \p s -> TokenWord p s }
     ($alpha | $digit)+   { \p s -> TokenStr p (read s) }
-	
-{ 
-data Token = 
+
+{
+data Token =
   TokenLoad AlexPosn        |
   TokenAssign AlexPosn      |
   TokenTxt AlexPosn         |
   TokenExt AlexPosn         |
   TokenVar AlexPosn         |
   TokenUnite AlexPosn       |
-  TokenPreach AlexPosn      | 
+  TokenPreach AlexPosn      |
   TokenSelect AlexPosn      |
   TokenAll AlexPosn         |
   TokenWhere AlexPosn       |
@@ -55,7 +55,7 @@ data Token =
   TokenArr AlexPosn         |
   TokenApp AlexPosn         |
   TokenAsc AlexPosn         |
-  TokenDesc AlexPosn        | 
+  TokenDesc AlexPosn        |
   TokenNC AlexPosn          |
   TokenNN AlexPosn          |
   TokenCom AlexPosn         |

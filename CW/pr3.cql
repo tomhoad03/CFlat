@@ -1,17 +1,15 @@
-=D program 1
+=D program 3
 
-load A = "A.csv"
-load B = "B.csv"
+load A = "D.csv"
+load B = "E.csv"
 
 var C = unite A B
-var D = select (1, 2) of C
 
-preach D
+var D = select all of C where (1 == 5)
+var E = select (1, 2, 3, 4) of D
 
-=D load A = "A.csv"
-=D load B = "B.csv"
-=D var C = unite A B
-=D var D = select all of C where (1 == 5)
+arrange E asc
+
+preach E
+
 =D var E = select (1, 2 nullcase 6, 3 nullcase 7, 4 nullcase 8) of C
-=D arrange E asc
-=D preach E 
