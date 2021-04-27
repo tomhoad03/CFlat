@@ -15,7 +15,7 @@ import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delet
 -- ghc -o csvql Main.hs
 -- ./csvql pr1.cql (exclude the ./ for a regular terminal)
 
--- csvs stored as [("X", ["Hello", "World"]), ("Y", ["Haskell", "Java"])]
+-- csvs stored as [("X", [["Hello", "World"], ["Goodbye", "Earth"]]), ("Y", [["Haskell", "Java", ["C++", "CFlat"]])
 
 -- read in the program from the cmd args
 main :: IO ()
@@ -48,9 +48,7 @@ errorCall e = do hPutStr stderr ("Error: " ++ show e)
 
 -- solve a program
 solver :: Exp -> IO ()
-solver parsedFile = do let result = interpreter parsedFile []
-                       mapM_ putStrLn result
-                       -- print result
+solver parsedFile = mapM_ (putStrLn . intercalate ",") (interpreter parsedFile [])
 
 
 
@@ -59,6 +57,7 @@ readCsv :: Eq a => a -> [(a, p)] -> p
 readCsv csvName csvs = readMaybe (lookup csvName csvs)
                          where readMaybe (Just a) = a
                                readMaybe Nothing = error "Nothing"
+
 
 
 -- break a csv into its columns
@@ -70,24 +69,24 @@ commaSplit xs s = readMaybe (elemIndex ',' s)
 
 
 -- interpret the parsed file
-interpreter :: Exp -> [(String, [String])] -> [String]
+interpreter :: Exp -> [(String, [[String]])] -> [[String]]
 
--- load a table
+-- load a table (kinda illegal using unsafe IO)
 -- 'load A = "A.csv"'
 interpreter (TmLoad varName csvName program) csvs = do let contents = readFile (csvName ++ ".csv")
-                                                       let splitContents = lines $ unsafePerformIO contents -- kinda illegal
+                                                       let splitContents = map (commaSplit []) (lines $ unsafePerformIO contents)
                                                        interpreter program (csvs ++ [(varName, splitContents)])
+                                                         where commaSplitxs xs s = readMaybe (elemIndex ',' s)
+                                                                                     where readMaybe (Just a) = commaSplit (xs ++ [take a s]) (drop (a + 1) s)
+                                                                                           readMaybe Nothing = xs ++ [s]
 
 -- add another table to another
 -- 'A add B'
-interpreter (Tm1Add csvNameA csvNameB) csvs = do let csvA = readCsv csvNameA csvs
-                                                 let csvB = readCsv csvNameB csvs
-                                                 csvA ++ csvB
+interpreter (Tm1Add csvNameA csvNameB) csvs = readCsv csvNameA csvs ++ readCsv csvNameB csvs
 
 -- variable assignment
 -- 'var C = ...'
-interpreter (TmVar varName csvName program) csvs = do let selection = interpreter csvName csvs
-                                                      interpreter program (csvs ++ [(varName, selection)])
+interpreter (TmVar varName csvName program) csvs = interpreter program (csvs ++ [(varName, interpreter csvName csvs)])
 
 -- !!!!!maybe add | Cols nullCase Cols     { TmNullCase $1 $3 }  for NullCase!!!!!!
 -- select all of A
@@ -95,31 +94,25 @@ interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simp
 
 -- select certain cols from a table
 -- 'select (1, 2) of A'
-interpreter (Tm2Select cols csvName) csvs = do let csv = readCsv csvName csvs
-                                               let splitCsv = map (commaSplit []) csv
-                                               map (intercalate ",") (transpose $ readCols cols splitCsv [])
-                                                 where readCols (TmCols a b) splitCsv xs = xs ++ readCols a splitCsv xs ++ readCols b splitCsv xs
-                                                       readCols (TmNullColl col nullColl) splitCsv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) splitCsv) (map (!! (nullColl - 1)) splitCsv)]]
-                                                                                                             where nullCase ("", y) = y
-                                                                                                                   nullCase (x, y) = x
-                                                       readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
+interpreter (Tm2Select cols csvName) csvs = transpose (readCols cols (readCsv csvName csvs) [])
+                                              where readCols (TmCols a b) splitCsv xs = xs ++ readCols a splitCsv xs ++ readCols b splitCsv xs
+                                                    readCols (TmNullColl col nullColl) splitCsv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) splitCsv) (map (!! (nullColl - 1)) splitCsv)]]
+                                                                                                          where nullCase ("", y) = y
+                                                                                                                nullCase (x, y) = x
+                                                    readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
 
 -- select all cols from a table where certain cols match a condition
 -- 'select all of A where (1 == 2)'
-interpreter (Tm3Select csvName wheres) csvs = do let csv = readCsv csvName csvs
-                                                 whereInterpreter csv wheres
+interpreter (Tm3Select csvName wheres) csvs = whereInterpreter (readCsv csvName csvs) wheres
 
 -- select certain cols from a table where certain cols match a condition
 -- 'select (1, 2) of A where (1 == 2)'
-interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName csvs
-                                                      let whereCsv = whereInterpreter csv wheres
-                                                      let splitCsv = map (commaSplit []) whereCsv
-                                                      map (intercalate ",") (transpose $ readCols cols splitCsv [])
-                                                        where readCols (TmCols a b) splitCsv xs = xs ++ readCols a splitCsv xs ++ readCols b splitCsv xs
-                                                              readCols (TmNullColl col nullColl) splitCsv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) splitCsv) (map (!! (nullColl - 1)) splitCsv)]]
-                                                                                                             where nullCase ("", y) = y
-                                                                                                                   nullCase (x, y) = x
-                                                              readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
+interpreter (Tm4Select cols csvName wheres) csvs = transpose (readCols cols (whereInterpreter (readCsv csvName csvs) wheres) [])
+                                                     where readCols (TmCols a b) csv xs = xs ++ readCols a csv xs ++ readCols b csv xs
+                                                           readCols (TmNullColl col nullColl) csv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
+                                                                                                            where nullCase ("", y) = y
+                                                                                                                  nullCase (x, y) = x
+                                                           readCols (TmCol x) csv xs = [map (!! (x - 1)) csv]
 
 -- sort a table lexicographically
 -- 'arrange A asc 1'
@@ -135,50 +128,43 @@ interpreter (TmArr2 csvName i) csvs = do let csv = readCsv csvName csvs
 
 -- append two tables together
 -- 'append (A C)'
-interpreter (TmApp1 csvNameA csvNameB) csvs = do let splitCsvA = map (commaSplit []) $ readCsv csvNameA csvs
-                                                 let splitCsvB = map (commaSplit []) $ readCsv csvNameB csvs
-                                                 map (intercalate ",") (zipWith (++) splitCsvA splitCsvB)
+interpreter (TmApp1 csvNameA csvNameB) csvs = zipWith (++) (readCsv csvNameA csvs) (readCsv csvNameB csvs)
 
 -- append a column to a table
 -- 'append (A "hello")'
-interpreter (TmApp2 csvName s) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
-                                         map (intercalate "," . (++[s])) splitCsv
+interpreter (TmApp2 csvName s) csvs = map (++[s]) (readCsv csvName csvs)
 
 
 -- append a column to a table
 -- 'append (A "0")'
-interpreter (TmApp3 csvName i) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
-                                         map (intercalate "," . (++[show i])) splitCsv
+interpreter (TmApp3 csvName i) csvs = map (++[show i]) (readCsv csvName csvs)
 
 -- append a column to a table
 -- 'append (A "0b")'
-interpreter (TmApp4 csvName i s) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
-                                           map (intercalate "," . (++[show i ++ s])) splitCsv
+interpreter (TmApp4 csvName i s) csvs = map (++[show i ++ s]) (readCsv csvName csvs)
 
 -- merge two tables (for each, for each merge)
 -- 'unite A B'
-interpreter (TmUnite csvNameA csvNameB) csvs = do let aCsv = readCsv csvNameA csvs
-                                                  let bCsv = readCsv csvNameB csvs
-                                                  concatMap (\x -> map ((x ++ ",") ++ ) bCsv) aCsv
+interpreter (TmUnite csvNameA csvNameB) csvs = concatMap (\y -> map (++ y) (readCsv csvNameA csvs)) (readCsv csvNameB csvs)
 
 -- output a table
 -- 'preach C'
 interpreter (TmPreach csvName) csvs = readCsv csvName csvs
 
 
+
 -- filter a csv
-whereInterpreter :: [String] -> Wheres -> [String]
+whereInterpreter :: [[String]] -> Wheres -> [[String]]
 
 -- breaking down where conditions
 whereInterpreter csv (Tm1Where where1 where2) = whereInterpreter (whereInterpreter csv where1) where2
 
 -- filter cases
-whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
-                                 map (intercalate ",") (filterCsv splitCsv wheres)
-                                   where filterCsv splitCsv (Tm2Where a b) = filter (\x -> x !! (a - 1) == x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm3Where a b) = filter (\x -> x !! (a - 1) >= x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm4Where a b) = filter (\x -> x !! (a - 1) <= x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm5Where a b) = filter (\x -> x !! (a - 1) > x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) splitCsv
-                                         filterCsv splitCsv (Tm8Where a) = filter (\x -> x !! (a - 1) /= "") splitCsv
+whereInterpreter csv wheres = filterCsv csv wheres
+                                where filterCsv csv (Tm2Where a b) = filter (\x -> x !! (a - 1) == x !! (b - 1)) csv
+                                      filterCsv csv (Tm3Where a b) = filter (\x -> x !! (a - 1) >= x !! (b - 1)) csv
+                                      filterCsv csv (Tm4Where a b) = filter (\x -> x !! (a - 1) <= x !! (b - 1)) csv
+                                      filterCsv csv (Tm5Where a b) = filter (\x -> x !! (a - 1) > x !! (b - 1)) csv
+                                      filterCsv csv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) csv
+                                      filterCsv csv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) csv
+                                      filterCsv csv (Tm8Where a) = filter (\x -> x !! (a - 1) /= "") csv
