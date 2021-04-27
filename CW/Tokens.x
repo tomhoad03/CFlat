@@ -14,6 +14,7 @@ tokens :-
 	\"	     { \p s -> TokenTxt p     } -- How to tell where speech marks start and end.
     \.csv    { \p s -> TokenExt p     } -- csv file extension
 	var	     { \p s -> TokenVar p     }
+    add      { \p s -> TokenAdd p     }
 	unite    { \p s -> TokenUnite p   }
 	preach   { \p s -> TokenPreach p  }
 	select   { \p s -> TokenSelect p  }
@@ -37,7 +38,6 @@ tokens :-
 	\)       { \p s -> TokenRB p      }
 	$digit+  { \p s -> TokenInt p (read s)  }
 	$alpha [$alpha $digit \_ \’]*   { \p s -> TokenWord p s }
-    ($alpha | $digit)+   { \p s -> TokenStr p (read s) }
 
 {
 data Token =
@@ -46,6 +46,7 @@ data Token =
   TokenTxt AlexPosn         |
   TokenExt AlexPosn         |
   TokenVar AlexPosn         |
+  TokenAdd AlexPosn         |
   TokenUnite AlexPosn       |
   TokenPreach AlexPosn      |
   TokenSelect AlexPosn      |
@@ -68,8 +69,7 @@ data Token =
   TokenLB AlexPosn          |
   TokenRB AlexPosn          |
   TokenInt AlexPosn Int     |
-  TokenWord AlexPosn String |
-  TokenStr AlexPosn String
+  TokenWord AlexPosn String
   deriving (Eq,Show)
 
 tokenPosn :: Token -> String
@@ -78,6 +78,7 @@ tokenPosn (TokenAssign  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenTxt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenExt  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAdd  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUnite  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenPreach (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenSelect (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
@@ -101,5 +102,4 @@ tokenPosn (TokenLB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRB  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenWord (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenStr (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
 }

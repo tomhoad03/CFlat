@@ -41,8 +41,7 @@ parser lexedFile = do let parsedFile = parseCFlat lexedFile
 
 -- catch lexing and parsing errors
 errorCall :: ErrorCall -> IO ()
-errorCall e = do let err = show e
-                 hPutStr stderr ("Error: " ++ err)
+errorCall e = do hPutStr stderr ("Error: " ++ show e)
                  return ()
 
 
@@ -78,6 +77,12 @@ interpreter :: Exp -> [(String, [String])] -> [String]
 interpreter (TmLoad varName csvName program) csvs = do let contents = readFile (csvName ++ ".csv")
                                                        let splitContents = lines $ unsafePerformIO contents -- kinda illegal
                                                        interpreter program (csvs ++ [(varName, splitContents)])
+
+-- add another table to another
+-- 'A add B'
+interpreter (Tm1Add csvNameA csvNameB) csvs = do let csvA = readCsv csvNameA csvs
+                                                 let csvB = readCsv csvNameB csvs
+                                                 csvA ++ csvB
 
 -- variable assignment
 -- 'var C = ...'
@@ -127,9 +132,20 @@ interpreter (TmApp1 csvNameA csvNameB) csvs = do let splitCsvA = map (commaSplit
                                                  map (intercalate ",") (zipWith (++) splitCsvA splitCsvB)
 
 -- append a column to a table
--- 'append (A "0")'
+-- 'append (A "hello")'
 interpreter (TmApp2 csvName s) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
                                          map (intercalate "," . (++[s])) splitCsv
+
+
+-- append a column to a table
+-- 'append (A "0")'
+interpreter (TmApp3 csvName i) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
+                                         map (intercalate "," . (++[show i])) splitCsv
+
+-- append a column to a table
+-- 'append (A "0b")'
+interpreter (TmApp4 csvName i s) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
+                                           map (intercalate "," . (++[show i ++ s])) splitCsv
 
 -- merge two tables (for each, for each merge)
 -- 'unite A B'
