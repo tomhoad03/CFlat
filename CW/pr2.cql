@@ -1,5 +1,9 @@
-load A = "A.csv"
+=D program 2
 
-var C = select (3, 1) of A where (1 == 2)
+load A = "C.csv"
+
+var B = select (3, 1) of A where (1 == 2)
  
-arrange C asc
+var C = arrange B asc
+
+preach C

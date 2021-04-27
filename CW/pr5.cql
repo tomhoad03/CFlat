@@ -1,6 +1,13 @@
-load A = "A.csv"
-var C = select (1) of C 
+=D program 5
+
+load A = "G.csv"
+
+var B = select (1) of A 
+
 =D Append takes two arguments, the first is the string to append to, the second is the value to append
-var D = append C "0"
-var E = append D C
-preach E
+
+var C = append B "b0"
+
+var D = arrange C asc
+
+preach D

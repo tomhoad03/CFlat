@@ -9,8 +9,8 @@ $alpha = [a-zA-Z]
 tokens :-
 	$white+  ;
     "=D".*   ;
-    load	   { \p s -> TokenLoad p    }
-	=	       { \p s -> TokenAssign p  }
+    load	 { \p s -> TokenLoad p    }
+	=	     { \p s -> TokenAssign p  }
 	\"	     { \p s -> TokenTxt p     } -- How to tell where speech marks start and end.
     \.csv    { \p s -> TokenExt p     } -- csv file extension
 	var	     { \p s -> TokenVar p     }

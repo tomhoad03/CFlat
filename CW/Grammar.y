@@ -47,8 +47,8 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
 	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
 	| unite word word                                  { TmUnite $2 $3 }
-    | arrange word asc int                             { TmArr1 $2 $4}
-    | arrange word desc int                            { TmArr2 $2 $4}
+    | arrange word asc                                 { TmArr1 $2 }
+    | arrange word desc                                { TmArr2 $2 }
     | append word word                                 { TmApp1 $2 $3 }
     | append word '"' string '"'                       { TmApp2 $2 $4 }
 	| preach word                                      { TmPreach $2 }
@@ -65,9 +65,7 @@ Wheres : Wheres ',' Wheres    { Tm1Where $1 $3 }
 	   | int '!=' int         { Tm7Where $1 $3 }
        | int '==' notNull     { Tm8Where $1 }
 
-
 {
-
 parseError :: [Token] -> a
 parseError [] = error "Parse Error"
 parseError (t : ts) = error ("Parse error at " ++ (tokenPosn t))
@@ -79,8 +77,8 @@ data Exp = TmLoad String String Exp
 		 | Tm3Select String Wheres
 		 | Tm4Select Cols String Wheres
 		 | TmUnite String String
-         | TmArr1 String Int
-         | TmArr2 String Int
+         | TmArr1 String
+         | TmArr2 String
          | TmApp1 String String
          | TmApp2 String String
 		 | TmPreach String
@@ -97,7 +95,6 @@ data Wheres = Tm1Where Wheres Wheres
 		    | Tm5Where Int Int
 		    | Tm6Where Int Int
 		    | Tm7Where Int Int
-        | Tm8Where Int
-
-		    deriving Show
+            | Tm8Where Int
+            deriving Show
 }

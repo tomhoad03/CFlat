@@ -114,15 +114,22 @@ interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName 
 
 -- sort a table lexicographically
 -- 'arrange A asc'
-interpreter (Tm1Arrange csvName program) csvs = do let csv = readCsv csvName csvs
-                                                   let sortedCsv = sort csv
-                                                   interpreter program (delete (csvName, csv) csvs ++ [(csvName, sortedCsv)])
+interpreter (TmArr1 csvName) csvs = sort $ readCsv csvName csvs
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc'
-interpreter (Tm2Arrange csvName program) csvs = do let csv = readCsv csvName csvs
-                                                   let sortedCsv = reverse $ sort csv
-                                                   interpreter program (delete (csvName, csv) csvs ++ [(csvName, sortedCsv)])
+interpreter (TmArr2 csvName) csvs = reverse $ sort $ readCsv csvName csvs
+
+-- append two tables together
+-- 'append (A C)'
+interpreter (TmApp1 csvNameA csvNameB) csvs = do let splitCsvA = map (commaSplit []) $ readCsv csvNameA csvs
+                                                 let splitCsvB = map (commaSplit []) $ readCsv csvNameB csvs
+                                                 map (intercalate ",") (zipWith (++) splitCsvA splitCsvB)
+
+-- append a column to a table
+-- 'append (A "0")'
+interpreter (TmApp2 csvName s) csvs = do let splitCsv = map (commaSplit []) $ readCsv csvName csvs
+                                         map (intercalate "," . (++[s])) splitCsv
 
 -- merge two tables (for each, for each merge)
 -- 'unite A B'
@@ -133,20 +140,6 @@ interpreter (TmUnite csvNameA csvNameB) csvs = do let aCsv = readCsv csvNameA cs
 -- output a table
 -- 'preach C'
 interpreter (TmPreach csvName) csvs = readCsv csvName csvs
-
--- arrange asc 1
---interpreter (TmArr1 a b) csvs = do let csv = readCsv a csvs
---                                 let splitCsv = map (commaSplit []) csv
---                                 map (intercalate ",") (transpose (sort splitCsv))
-
--- arrange desc 1
---interpreter (TmArr2 a b) csvs = reverse $ sort $ readCsv a csvs
-
--- append (A C)
-interpreter (TmApp1 a b) csvs = readCsv a csvs ++ readCsv b csvs
-
--- append (A "0")
-interpreter (TmApp2 a b) csvs = readCsv a csvs ++ [b]
 
 -- filter a csv
 whereInterpreter :: [String] -> Wheres -> [String]
@@ -164,6 +157,3 @@ whereInterpreter csv wheres = do let splitCsv = map (commaSplit []) csv
                                          filterCsv splitCsv (Tm6Where a b) = filter (\x -> x !! (a - 1) < x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm7Where a b) = filter (\x -> x !! (a - 1) /= x !! (b - 1)) splitCsv
                                          filterCsv splitCsv (Tm8Where a) = filter (\x -> x !! (a - 1) /= "") splitCsv
-
-test :: Bool
-test = "Hello" == "Hello"

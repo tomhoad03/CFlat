@@ -1,4 +1,7 @@
-load A = "A.csv"
-var C = select (1, 2) of A where (2 == notNull)
-var C = arrange C asc
+load A = "F.csv"
+
+var B = select (1, 2) of A where (2 == notNull)
+
+var C = arrange B asc
+
 preach C

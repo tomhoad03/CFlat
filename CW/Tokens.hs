@@ -13927,7 +13927,7 @@ alex_actions = array (0 :: Int, 80)
   , (0,alex_action_30)
   ]
 
-{-# LINE 42 "Tokens.x" #-}
+{-# LINE 43 "Tokens.x" #-}
 
 data Token =
   TokenLoad AlexPosn        |
@@ -14093,16 +14093,7 @@ alex_action_30 =  \p s -> TokenStr p (read s)
 
 
 
-
-
-
-
-
 alexIndexInt16OffAddr arr off = arr ! off
-
-
-
-
 
 
 
