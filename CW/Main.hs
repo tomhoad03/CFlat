@@ -122,13 +122,13 @@ interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName 
                                                               readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
 
 -- sort a table lexicographically
--- 'arrange A asc'
+-- 'arrange A asc 1'
 interpreter (TmArr1 csvName i) csvs = do let csv = readCsv csvName csvs
                                          let splitCsv = map (commaSplit []) csv
                                          map (intercalate ",") (sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) splitCsv)
 
 -- sort a table reverse lexicographically
- -- 'arrange A desc'
+ -- 'arrange A desc 1'
 interpreter (TmArr2 csvName i) csvs = do let csv = readCsv csvName csvs
                                          let splitCsv = map (commaSplit []) csv
                                          map (intercalate ",") (sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) splitCsv)
