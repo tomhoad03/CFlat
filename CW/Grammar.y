@@ -57,6 +57,7 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| preach word                                      { TmPreach $2 }
 
 Cols : Cols ',' Cols          { TmCols $1 $3 }
+     | int nullCase int       { TmNullColl $1 $3 }
      | int                    { TmCol $1 }
 
 Wheres : Wheres ',' Wheres    { Tm1Where $1 $3 }
@@ -91,6 +92,7 @@ data Exp = TmLoad String String Exp
          deriving Show
 
 data Cols = TmCols Cols Cols
+          | TmNullColl Int Int
           | TmCol Int
 		  deriving Show
 

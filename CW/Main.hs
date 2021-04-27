@@ -97,10 +97,12 @@ interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simp
 -- 'select (1, 2) of A'
 interpreter (Tm2Select cols csvName) csvs = do let csv = readCsv csvName csvs
                                                let splitCsv = map (commaSplit []) csv
-                                               let intCols = readCols cols []
-                                               map (intercalate ",") (transpose (map (\x -> map (!! x) splitCsv) intCols))
-                                                 where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
-                                                       readCols (TmCol x) xs = [x - 1]
+                                               map (intercalate ",") (transpose $ readCols cols splitCsv [])
+                                                 where readCols (TmCols a b) splitCsv xs = xs ++ readCols a splitCsv xs ++ readCols b splitCsv xs
+                                                       readCols (TmNullColl col nullColl) splitCsv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) splitCsv) (map (!! (nullColl - 1)) splitCsv)]]
+                                                                                                             where nullCase ("", y) = y
+                                                                                                                   nullCase (x, y) = x
+                                                       readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
 
 -- select all cols from a table where certain cols match a condition
 -- 'select all of A where (1 == 2)'
@@ -112,10 +114,12 @@ interpreter (Tm3Select csvName wheres) csvs = do let csv = readCsv csvName csvs
 interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName csvs
                                                       let whereCsv = whereInterpreter csv wheres
                                                       let splitCsv = map (commaSplit []) whereCsv
-                                                      let intCols = readCols cols []
-                                                      map (intercalate ",") (transpose (map (\x -> map (!! x) splitCsv) intCols))
-                                                        where readCols (TmCols a b) xs = xs ++ readCols a xs ++ readCols b xs
-                                                              readCols (TmCol x) xs = [x - 1]
+                                                      map (intercalate ",") (transpose $ readCols cols splitCsv [])
+                                                        where readCols (TmCols a b) splitCsv xs = xs ++ readCols a splitCsv xs ++ readCols b splitCsv xs
+                                                              readCols (TmNullColl col nullColl) splitCsv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) splitCsv) (map (!! (nullColl - 1)) splitCsv)]]
+                                                                                                             where nullCase ("", y) = y
+                                                                                                                   nullCase (x, y) = x
+                                                              readCols (TmCol x) splitCsv xs = [map (!! (x - 1)) splitCsv]
 
 -- sort a table lexicographically
 -- 'arrange A asc'
@@ -156,6 +160,7 @@ interpreter (TmUnite csvNameA csvNameB) csvs = do let aCsv = readCsv csvNameA cs
 -- output a table
 -- 'preach C'
 interpreter (TmPreach csvName) csvs = readCsv csvName csvs
+
 
 -- filter a csv
 whereInterpreter :: [String] -> Wheres -> [String]
