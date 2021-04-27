@@ -8,7 +8,7 @@ import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List ( sort, elemIndex, elemIndices, intercalate, transpose, delete )
+import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delete )
 
 -- alex Tokens.x
 -- happy Grammar.y
@@ -123,11 +123,13 @@ interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName 
 
 -- sort a table lexicographically
 -- 'arrange A asc'
-interpreter (TmArr1 csvName) csvs = sort $ readCsv csvName csvs
+interpreter (TmArr1 csvName i) csvs = sortBy compareCols $ readCsv csvName csvs
+                                        where compareCols x y = compare (x !! (i - 1)) (y !! (i - 1))
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc'
-interpreter (TmArr2 csvName) csvs = reverse $ sort $ readCsv csvName csvs
+interpreter (TmArr2 csvName i) csvs = sortBy compareCols $ readCsv csvName csvs
+                                        where compareCols x y = compare (y !! (i - 1)) (x !! (i - 1))
 
 -- append two tables together
 -- 'append (A C)'

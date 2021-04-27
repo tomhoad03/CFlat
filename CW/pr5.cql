@@ -8,6 +8,6 @@ var B = select (1) of A
 
 var C = append B "0"
 
-var D = arrange C asc
+var D = arrange C asc 1
 
 preach D
