@@ -123,13 +123,15 @@ interpreter (Tm4Select cols csvName wheres) csvs = do let csv = readCsv csvName 
 
 -- sort a table lexicographically
 -- 'arrange A asc'
-interpreter (TmArr1 csvName i) csvs = sortBy compareCols $ readCsv csvName csvs
-                                        where compareCols x y = compare (x !! (i - 1)) (y !! (i - 1))
+interpreter (TmArr1 csvName i) csvs = do let csv = readCsv csvName csvs
+                                         let splitCsv = map (commaSplit []) csv
+                                         map (intercalate ",") (sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) splitCsv)
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc'
-interpreter (TmArr2 csvName i) csvs = sortBy compareCols $ readCsv csvName csvs
-                                        where compareCols x y = compare (y !! (i - 1)) (x !! (i - 1))
+interpreter (TmArr2 csvName i) csvs = do let csv = readCsv csvName csvs
+                                         let splitCsv = map (commaSplit []) csv
+                                         map (intercalate ",") (sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) splitCsv)
 
 -- append two tables together
 -- 'append (A C)'
