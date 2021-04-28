@@ -88,7 +88,6 @@ interpreter (Tm1Add csvNameA csvNameB) csvs = readCsv csvNameA csvs ++ readCsv c
 -- 'var C = ...'
 interpreter (TmVar varName csvName program) csvs = interpreter program (csvs ++ [(varName, interpreter csvName csvs)])
 
--- !!!!!maybe add | Cols nullCase Cols     { TmNullCase $1 $3 }  for NullCase!!!!!!
 -- select all of A
 interpreter (Tm1Select csvName) csvs = readCsv csvName csvs -- selection as simple assignment
 
@@ -117,14 +116,12 @@ interpreter (Tm4Select cols csvName wheres) csvs = transpose (readCols cols (whe
 -- sort a table lexicographically
 -- 'arrange A asc 1'
 interpreter (TmArr1 csvName i) csvs = do let csv = readCsv csvName csvs
-                                         let splitCsv = map (commaSplit []) csv
-                                         map (intercalate ",") (sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) splitCsv)
+                                         sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) csv
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc 1'
 interpreter (TmArr2 csvName i) csvs = do let csv = readCsv csvName csvs
-                                         let splitCsv = map (commaSplit []) csv
-                                         map (intercalate ",") (sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) splitCsv)
+                                         sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) csv
 
 -- append two tables together
 -- 'append (A C)'
