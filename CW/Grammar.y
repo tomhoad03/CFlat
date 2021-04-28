@@ -28,6 +28,8 @@ import Tokens
     notNull  { TokenNN      _  }
 	update   { TokenUpdate  _  }
     delete   { TokenDelete  _  }
+    distinct { TokenDist    _  }
+    top      { TokenTop     _  }
 	','      { TokenCom     _  }
 	'=='     { TokenEq      _  }
 	'>='     { TokenGreatEq _  }
@@ -50,6 +52,8 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| select '(' Cols ')' of word                      { Tm2Select $3 $6 }
 	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
 	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
+    | select distinct '(' Cols ')' of word             { Tm5Select $4 $7 }
+    | select top int of word                           { Tm6Select $3 $5 }	
 	| unite word word                                  { TmUnite $2 $3 }
     | arrange word asc int                             { TmArr1 $2 $4 }
     | arrange word desc int                            { TmArr2 $2 $4 }
@@ -101,6 +105,8 @@ data Exp = TmLoad String String Exp
 		 | Tm2Select Cols String
 		 | Tm3Select String Wheres
 		 | Tm4Select Cols String Wheres
+         | Tm5Select Cols String
+         | Tm6Select Int String
 		 | TmUnite String String
          | TmArr1 String Int
          | TmArr2 String Int

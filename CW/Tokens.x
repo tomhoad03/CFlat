@@ -29,6 +29,8 @@ tokens :-
     notNull  { \p s -> TokenNN p      }
     update   { \p s -> TokenUpdate p  }
 	delete   { \p s -> TokenDelete p  }
+    distinct { \p s -> TokenDist p    }
+    top      { \p s -> TokenTop p     }
 	\,       { \p s -> TokenCom p     }
 	\==      { \p s -> TokenEq p      }
     \>=      { \p s -> TokenGreatEq p }
@@ -63,6 +65,8 @@ data Token =
   TokenNN AlexPosn          |
   TokenUpdate AlexPosn      |
   TokenDelete AlexPosn      |
+  TokenDist AlexPosn        |
+  TokenTop AlexPosn         |
   TokenCom AlexPosn         |
   TokenEq AlexPosn          |
   TokenGreatEq AlexPosn     |
@@ -97,6 +101,8 @@ tokenPosn (TokenNC (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenNN (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenUpdate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDelete (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDist (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenTop (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenCom  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenGreatEq  (AlexPn a l c)) = show(l) ++ ":" ++ show(c)

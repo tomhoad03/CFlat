@@ -8,7 +8,7 @@ import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delete )
+import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delete, nub )
 
 -- alex Tokens.x
 -- happy Grammar.y
@@ -121,6 +121,14 @@ interpreter (Tm4Select cols csvName wheres) csvs = transpose (readCols cols (whe
                                                            readCol (TmNullCol col nullColl) csv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
                                                                                                            where nullCase ("", y) = y
                                                                                                                  nullCase (x, y) = x
+																												 
+-- select distinct values from a table
+-- 'select distinct (1,2) of A'
+interpreter (Tm5Select cols csvName) csvs = nub (interpreter (Tm2Select cols csvName) csvs)
+
+-- select the top n records from a table
+-- 'select top 4 of A'
+interpreter (Tm6Select n csvName) csvs = take n (interpreter (Tm1Select csvName) csvs)
 
 -- sort a table lexicographically
 -- 'arrange A asc'
@@ -154,8 +162,6 @@ interpreter (TmUnite csvNameA csvNameB) csvs = concatMap (\y -> map (++ y) (read
 -- output a table
 -- 'preach C'
 interpreter (TmPreach csvName) csvs = readCsv csvName csvs
-
-
 
 -- filter a csv
 whereInterpreter :: [[String]] -> Wheres -> [[String]]

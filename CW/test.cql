@@ -1,5 +1,5 @@
 load A = "A.csv"
 
-var B = select (1) of A where (1 == notNull)
+var B = select top 2 of A
 
-arrange B asc
+preach B
