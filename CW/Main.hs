@@ -121,7 +121,7 @@ interpreter (Tm4Select cols csvName wheres) csvs = transpose (readCols cols (whe
                                                            readCol (TmNullCol col nullColl) csv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
                                                                                                            where nullCase ("", y) = y
                                                                                                                  nullCase (x, y) = x
-																												 
+
 -- select distinct values from a table
 -- 'select distinct (1,2) of A'
 interpreter (Tm5Select cols csvName) csvs = nub (interpreter (Tm2Select cols csvName) csvs)
