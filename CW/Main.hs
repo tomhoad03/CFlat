@@ -15,7 +15,7 @@ import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delet
 -- ghc -o csvql Main.hs
 -- ./csvql pr1.cql (exclude the ./ for a regular terminal)
 
--- csvs stored as [("X", [["Hello", "World"], ["Goodbye", "Earth"]]), ("Y", [["Haskell", "Java", ["C++", "CFlat"]])
+-- csvs stored as [("X", [["Hello", "World"], ["Goodbye", "Earth"]]), ("Y", [["Haskell", "Java"], ["C++", "CFlat"]])
 
 -- read in the program from the cmd args
 main :: IO ()
@@ -131,12 +131,18 @@ interpreter (Tm5Select cols csvName) csvs = nub (interpreter (Tm2Select cols csv
 interpreter (Tm6Select n csvName) csvs = take n (interpreter (Tm1Select csvName) csvs)
 
 -- sort a table lexicographically
--- 'arrange A asc'
-interpreter (TmArr1 csvName i) csvs = sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) (readCsv csvName csvs)
+-- 'arrange A asc 1'
+interpreter (TmArr1 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
+                                    | otherwise = sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) (readCsv csvName csvs)
+                                      where arity = length $ line
+                                            line = readCsv csvName csvs !! 0
 
 -- sort a table reverse lexicographically
- -- 'arrange A desc'
-interpreter (TmArr2 csvName i) csvs = sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) (readCsv csvName csvs)
+ -- 'arrange A desc 1'
+interpreter (TmArr2 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
+                                    | otherwise = sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) (readCsv csvName csvs)
+                                      where arity = length $ line
+                                            line = readCsv csvName csvs !! 0
 
 -- append two tables together
 -- 'append (A C)'
