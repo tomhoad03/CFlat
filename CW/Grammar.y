@@ -10,8 +10,8 @@ import Tokens
 %token
 	load	 { TokenLoad    _  }
 	'='	     { TokenAssign  _  }
-	'"'	     { TokenTxt     _  } -- How to tell where speech marks start and end.
-	'.csv'   { TokenExt     _  } -- csv file extension
+	'"'	     { TokenTxt     _  }
+	'.csv'   { TokenExt     _  }
 	var	     { TokenVar     _  }
 	add      { TokenAdd     _  }
 	unite    { TokenUnite   _  }
@@ -28,7 +28,7 @@ import Tokens
     notNull  { TokenNN      _  }
 	update   { TokenUpdate  _  }
     delete   { TokenDelete  _  }
-    distinct { TokenDist    _  }
+	distinct { TokenDist    _  }
     top      { TokenTop     _  }
 	','      { TokenCom     _  }
 	'=='     { TokenEq      _  }
@@ -52,8 +52,8 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| select '(' Cols ')' of word                      { Tm2Select $3 $6 }
 	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
 	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
-    | select distinct '(' Cols ')' of word             { Tm5Select $4 $7 }
-    | select top int of word                           { Tm6Select $3 $5 }	
+	| select distinct '(' Cols ')' of word             { Tm5Select $4 $7 }
+    | select top int of word                           { Tm6Select $3 $5 }
 	| unite word word                                  { TmUnite $2 $3 }
     | arrange word asc int                             { TmArr1 $2 $4 }
     | arrange word desc int                            { TmArr2 $2 $4 }
@@ -87,7 +87,8 @@ Where  : int '==' int           { Tm2Where $1 $3 }
 	   | int '>' int            { Tm5Where $1 $3 }
 	   | int '<' int            { Tm6Where $1 $3 }
 	   | int '!=' int           { Tm7Where $1 $3 }
-       | int '==' notNull       { Tm8Where $1 }
+	   | int '==' word          { Tm8Where $1 $3 }
+       | int '==' notNull       { Tm9Where $1 }
 
 Words : word ',' Words { TmWords $1 $3 }
       | word           { TmWord $1 }
@@ -105,7 +106,7 @@ data Exp = TmLoad String String Exp
 		 | Tm2Select Cols String
 		 | Tm3Select String Wheres
 		 | Tm4Select Cols String Wheres
-         | Tm5Select Cols String
+		 | Tm5Select Cols String
          | Tm6Select Int String
 		 | TmUnite String String
          | TmArr1 String Int
@@ -146,7 +147,8 @@ data Where  = Tm2Where Int Int
 		    | Tm5Where Int Int
 		    | Tm6Where Int Int
 		    | Tm7Where Int Int
-            | Tm8Where Int
+			| Tm8Where Int String
+            | Tm9Where Int
             deriving Show
 
 data Words = TmWords String Words

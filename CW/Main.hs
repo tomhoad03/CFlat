@@ -15,6 +15,8 @@ import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delet
 -- ghc -o csvql Main.hs
 -- ./csvql pr1.cql (exclude the ./ for a regular terminal)
 
+-- cabal run
+
 -- csvs stored as [("X", [["Hello", "World"], ["Goodbye", "Earth"]]), ("Y", [["Haskell", "Java"], ["C++", "CFlat"]])
 
 -- read in the program from the cmd args
@@ -101,10 +103,11 @@ interpreter (Tm1Select csvName) csvs = readCsv csvName csvs
 -- select certain cols from a table
 -- 'select (1, 2) of A'
 interpreter (Tm2Select cols csvName) csvs = transpose (readCols cols (readCsv csvName csvs) [])
-                                              where readCols (Tm1Cols colsA colsB) csv xs = xs ++ readCol colsA csv xs ++ readCols colsB csv xs                                              
+                                              where readCols (Tm1Cols colsA colsB) csv xs = xs ++ readCol colsA csv xs ++ readCols colsB csv xs
                                                     readCols (Tm2Cols colsA) csv xs = readCol colsA csv xs
+
                                                     readCol (TmCol x) csv xs = [map (!! (x - 1)) csv]
-                                                    readCol (TmNullCol col nullColl) csv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
+                                                    readCol (TmNullCol col nullColl) csv xs = [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
                                                                                                     where nullCase ("", y) = y
                                                                                                           nullCase (x, y) = x
 
@@ -115,10 +118,11 @@ interpreter (Tm3Select csvName wheres) csvs = whereInterpreter (readCsv csvName 
 -- select certain cols from a table where certain cols match a condition
 -- 'select (1, 2) of A where (1 == 2)'
 interpreter (Tm4Select cols csvName wheres) csvs = transpose (readCols cols (whereInterpreter (readCsv csvName csvs) wheres) [])
-                                                     where readCols (Tm1Cols colsA colsB) csv xs = xs ++ readCol colsA csv xs ++ readCols colsB csv xs                                                    
+                                                     where readCols (Tm1Cols colsA colsB) csv xs = xs ++ readCol colsA csv xs ++ readCols colsB csv xs
                                                            readCols (Tm2Cols colsA) csv xs = readCol colsA csv xs
+
                                                            readCol (TmCol x) csv xs = [map (!! (x - 1)) csv]
-                                                           readCol (TmNullCol col nullColl) csv xs = do [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
+                                                           readCol (TmNullCol col nullColl) csv xs = [[ a | a <- zipWith (curry nullCase) (map (!! (col - 1)) csv) (map (!! (nullColl - 1)) csv)]]
                                                                                                            where nullCase ("", y) = y
                                                                                                                  nullCase (x, y) = x
 
@@ -134,15 +138,15 @@ interpreter (Tm6Select n csvName) csvs = take n (interpreter (Tm1Select csvName)
 -- 'arrange A asc 1'
 interpreter (TmArr1 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
                                     | otherwise = sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) (readCsv csvName csvs)
-                                      where arity = length $ line
-                                            line = readCsv csvName csvs !! 0
+                                                    where arity = length line
+                                                          line = head (readCsv csvName csvs)
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc 1'
 interpreter (TmArr2 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
                                     | otherwise = sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) (readCsv csvName csvs)
-                                      where arity = length $ line
-                                            line = readCsv csvName csvs !! 0
+                                      where arity = length line
+                                            line = head (readCsv csvName csvs)
 
 -- append two tables together
 -- 'append (A C)'
@@ -151,7 +155,6 @@ interpreter (TmApp1 csvNameA csvNameB) csvs = zipWith (++) (readCsv csvNameA csv
 -- append a column to a table
 -- 'append (A "hello")'
 interpreter (TmApp2 csvName s) csvs = map (++[s]) (readCsv csvName csvs)
-
 
 -- append a column to a table
 -- 'append (A "0")'
@@ -169,16 +172,20 @@ interpreter (TmUnite csvNameA csvNameB) csvs = concatMap (\y -> map (++ y) (read
 -- 'preach C'
 interpreter (TmPreach csvName) csvs = readCsv csvName csvs
 
+
+
 -- filter a csv
 whereInterpreter :: [[String]] -> Wheres -> [[String]]
 
 whereInterpreter csv wheres = readWheres wheres csv
                                 where readWheres (Tm1Wheres whereA whereB) csv = readWheres whereB (filterCsv whereA csv)
                                       readWheres (Tm2Wheres whereA) csv = filterCsv whereA csv
+
                                       filterCsv (Tm2Where a b) csv = filter (\x -> x !! (a - 1) == x !! (b - 1)) csv
                                       filterCsv (Tm3Where a b) csv = filter (\x -> x !! (a - 1) >= x !! (b - 1)) csv
                                       filterCsv (Tm4Where a b) csv = filter (\x -> x !! (a - 1) <= x !! (b - 1)) csv
                                       filterCsv (Tm5Where a b) csv = filter (\x -> x !! (a - 1) > x !! (b - 1)) csv
                                       filterCsv (Tm6Where a b) csv = filter (\x -> x !! (a - 1) < x !! (b - 1)) csv
                                       filterCsv (Tm7Where a b) csv = filter (\x -> x !! (a - 1) /= x !! (b - 1)) csv
-                                      filterCsv (Tm8Where a) csv = filter (\x -> x !! (a - 1) /= "") csv
+                                      filterCsv (Tm8Where a b) csv = filter (\x -> x !! (a - 1) == b) csv
+                                      filterCsv (Tm9Where a) csv = filter (\x -> x !! (a - 1) /= "") csv

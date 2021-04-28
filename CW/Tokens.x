@@ -11,8 +11,8 @@ tokens :-
     "=D".*   ;
     load	 { \p s -> TokenLoad p    }
 	=	     { \p s -> TokenAssign p  }
-	\"	     { \p s -> TokenTxt p     } -- how to tell where speech marks start and end.
-    \.csv    { \p s -> TokenExt p     } -- csv file extension
+	\"	     { \p s -> TokenTxt p     }
+    \.csv    { \p s -> TokenExt p     }
 	var	     { \p s -> TokenVar p     }
     add      { \p s -> TokenAdd p     }
 	unite    { \p s -> TokenUnite p   }

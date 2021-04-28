@@ -17425,16 +17425,7 @@ alex_action_34 =  \p s -> TokenWord p s
 
 
 
-
-
-
-
-
 alexIndexInt16OffAddr arr off = arr ! off
-
-
-
-
 
 
 
