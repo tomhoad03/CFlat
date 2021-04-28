@@ -60,17 +60,20 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
     | update word '(' Sets ')' where '(' Wheres ')'    { TmUpdate $2 $4 $8 }
     | delete of word where '(' Wheres ')'              { TmDelete $3 $6 }
 	
-Sets : Sets ',' Sets            { TmSets $1 $3 }
-     | int '=' '"' word '"'     { TmSet1 $1 $4 }
+Sets : Set ',' Sets             { TmSets $1 $3 }
+     
+Set  : int '=' '"' word '"'     { TmSet1 $1 $4 }
      | int '=' int              { TmSet2 $1 $3 }
 	 | int '=' '"' int word '"' { TmSet3 $1 $4 $5 }
 
-Cols : Cols ',' Cols            { TmCols $1 $3 }
-     | int nullCase int         { TmNullColl $1 $3 }
+Cols : Col ',' Cols             { TmCols $1 $3 }
+
+Col  : int nullCase int         { TmNullColl $1 $3 }
      | int                      { TmCol $1 }
 
-Wheres : Wheres ',' Wheres      { Tm1Where $1 $3 }
-       | int '==' int           { Tm2Where $1 $3 }
+Wheres : Where ',' Wheres       { Tm1Where $1 $3 }
+
+Where  : int '==' int           { Tm2Where $1 $3 }
 	   | int '>=' int           { Tm3Where $1 $3 }
 	   | int '<=' int           { Tm4Where $1 $3 }
 	   | int '>' int            { Tm5Where $1 $3 }
@@ -79,6 +82,7 @@ Wheres : Wheres ',' Wheres      { Tm1Where $1 $3 }
        | int '==' notNull       { Tm8Where $1 }
 
 {
+
 parseError :: [Token] -> a
 parseError [] = error "Parse Error"
 parseError (t : ts) = error ("Parse error at " ++ (tokenPosn t) ++ show t)
@@ -102,19 +106,25 @@ data Exp = TmLoad String String Exp
          | TmDelete String Wheres
          deriving Show
 
-data Sets = TmSets Sets Sets
-          | TmSet1 Int String
+data Sets = TmSets Set Sets
+          deriving Show
+          
+data Set  = TmSet1 Int String
           | TmSet2 Int Int
           | TmSet3 Int Int String
 		  deriving Show
 
-data Cols = TmCols Cols Cols
-          | TmNullColl Int Int
+data Cols = TmCols Col Cols
+          deriving Show
+
+data Col  = TmNullColl Int Int
           | TmCol Int
 		  deriving Show
 
-data Wheres = Tm1Where Wheres Wheres
-            | Tm2Where Int Int
+data Wheres = Tm1Where Where Wheres
+            deriving Show
+
+data Where  = Tm2Where Int Int
 		    | Tm3Where Int Int
 		    | Tm4Where Int Int
 		    | Tm5Where Int Int
