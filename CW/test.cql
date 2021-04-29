@@ -1,6 +1,5 @@
-load A = "X.csv"
-load B = "X.csv"
+load A = "A.csv"
 
-var B = unite A A
+var B = A add ("Brain")
 
 preach B
