@@ -1,6 +1,6 @@
 =D program 2
 
-load A = "C.csv"
+load A = "A.csv"
 
 var B = select (3, 1) of A where (1 == 2)
  

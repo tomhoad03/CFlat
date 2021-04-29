@@ -1,6 +1,6 @@
 =D program 5
 
-load A = "G.csv"
+load A = "A.csv"
 
 var B = select (1) of A 
 
