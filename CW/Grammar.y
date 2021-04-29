@@ -96,7 +96,7 @@ Words : word ',' Words { TmWords $1 $3 }
 {
 parseError :: [Token] -> a
 parseError [] = error "Parse Error"
-parseError (t : ts) = error ("Parse error at " ++ (tokenPosn t) ++ show t)
+parseError (t : ts) = error ("Parse error at " ++ (tokenPosn t) ++ " " ++ show t)
 
 data Exp = TmLoad String String Exp
          | TmVar String Exp Exp

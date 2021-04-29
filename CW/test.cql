@@ -1,5 +1,6 @@
-load A = "A.csv"
+load A = "X.csv"
+load B = "X.csv"
 
-var B = select top 100 of A
+var B = unite A A
 
 preach B

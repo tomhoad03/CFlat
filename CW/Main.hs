@@ -51,6 +51,7 @@ errorCall e = do hPutStr stderr ("Error: " ++ show e)
 -- solve a program
 solver :: Exp -> IO ()
 solver parsedFile = mapM_ (putStrLn . intercalate ",") (interpreter parsedFile [])
+                       
 
 
 
@@ -64,6 +65,7 @@ readCsv csvName csvs = readMaybe (lookup csvName csvs)
 
 -- break a csv into its columns
 commaSplit :: [String] -> String -> [String]
+commaSplit [] _ = []
 commaSplit xs s = readMaybe (elemIndex ',' s)
                     where readMaybe (Just a) = commaSplit (xs ++ [take a s]) (drop (a + 1) s)
                           readMaybe Nothing = xs ++ [s]
@@ -136,17 +138,25 @@ interpreter (Tm6Select n csvName) csvs = take n (interpreter (Tm1Select csvName)
 
 -- sort a table lexicographically
 -- 'arrange A asc 1'
-interpreter (TmArr1 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
+interpreter (TmArr1 csvName i) csvs | arity == 0 = []
+                                    | i > arity = error "ArrayIndexOutOfBounds"
                                     | otherwise = sortBy (\xs ys -> compare (xs !! (i - 1)) (ys !! (i - 1))) (readCsv csvName csvs)
                                                     where arity = length line
-                                                          line = head (readCsv csvName csvs)
+                                                          csv = readCsv csvName csvs
+                                                          line = safeHead (length csv) csv
+                                                                   where safeHead n xs | n == 0 = []
+                                                                                       | n > 0 = head xs
 
 -- sort a table reverse lexicographically
  -- 'arrange A desc 1'
-interpreter (TmArr2 csvName i) csvs | i > arity = error "ArrayIndexOutOfBounds"
+interpreter (TmArr2 csvName i) csvs | arity == 0 = []
+                                    | i > arity = error "ArrayIndexOutOfBounds"
                                     | otherwise = sortBy (\xs ys -> compare (ys !! (i - 1)) (xs !! (i - 1))) (readCsv csvName csvs)
                                       where arity = length line
-                                            line = head (readCsv csvName csvs)
+                                            csv = readCsv csvName csvs
+                                            line = safeHead (length csv) csv
+                                                     where safeHead n xs | n == 0 = []
+                                                                         | n > 0 = head xs
 
 -- append two tables together
 -- 'append (A C)'
