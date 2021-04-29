@@ -44,56 +44,56 @@ import Tokens
 
 %%
 
-Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
-    | var word '=' Exp Exp                             { TmVar $2 $4 $5 }
-	| word add word                                    { Tm1Add $1 $3 }
-	| word add '(' Words ')'                           { Tm2Add $1 $4 }
-	| select all of word                               { Tm1Select $4 }
-	| select '(' Cols ')' of word                      { Tm2Select $3 $6 }
-	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7 }
+Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8    }
+    | var word '=' Exp Exp                             { TmVar $2 $4 $5     }
+	| word add word                                    { Tm1Add $1 $3       }
+	| word add '(' Words ')'                           { Tm2Add $1 $4       }
+	| select all of word                               { Tm1Select $4       }
+	| select '(' Cols ')' of word                      { Tm2Select $3 $6    }
+	| select all of word where '(' Wheres ')'          { Tm3Select $4 $7    }
 	| select '(' Cols ')' of word where '(' Wheres ')' { Tm4Select $3 $6 $9 }
-	| select distinct '(' Cols ')' of word             { Tm5Select $4 $7 }
-    | select top int of word                           { Tm6Select $3 $5 }
-	| unite word word                                  { TmUnite $2 $3 }
-    | arrange word asc int                             { TmArr1 $2 $4 }
-    | arrange word desc int                            { TmArr2 $2 $4 }
-	| arrange word asc                                 { TmArr3 $2 }
-	| arrange word desc                                { TmArr4 $2 }
-    | append word word                                 { TmApp1 $2 $3 }
-    | append word '"' word '"'                         { TmApp2 $2 $4 }
-	| append word '"' int '"'                          { TmApp3 $2 $4 }
-	| append word '"' int word '"'                     { TmApp4 $2 $4 $5 }
-	| preach word                                      { TmPreach $2 }
-	| update word '(' Sets ')' where '(' Wheres ')'    { TmUpdate $2 $4 $8 }
-    | delete of word where '(' Wheres ')'              { TmDelete $3 $6 }
+	| select distinct '(' Cols ')' of word             { Tm5Select $4 $7    }
+    | select top int of word                           { Tm6Select $3 $5    }
+	| unite word word                                  { TmUnite $2 $3      }
+    | arrange word asc int                             { TmArr1 $2 $4       }
+    | arrange word desc int                            { TmArr2 $2 $4       }
+	| arrange word asc                                 { TmArr3 $2          }
+	| arrange word desc                                { TmArr4 $2          }
+    | append word word                                 { TmApp1 $2 $3       }
+    | append word '"' word '"'                         { TmApp2 $2 $4       }
+	| append word '"' int '"'                          { TmApp3 $2 $4       }
+	| append word '"' int word '"'                     { TmApp4 $2 $4 $5    }
+	| preach word                                      { TmPreach $2        }
+	| update word '(' Sets ')' where '(' Wheres ')'    { TmUpdate $2 $4 $8  }
+    | delete of word where '(' Wheres ')'              { TmDelete $3 $6     }
 
-Sets : Set ',' Sets             { Tm1Sets $1 $3 }
-     | Set                      { Tm2Sets $1 }
+Sets : Set ',' Sets             { Tm1Sets $1 $3   }
+     | Set                      { Tm2Sets $1      }
      
-Set  : int '=' '"' word '"'     { TmSet1 $1 $4 }
-     | int '=' int              { TmSet2 $1 $3 }
+Set  : int '=' '"' word '"'     { TmSet1 $1 $4    }
+     | int '=' int              { TmSet2 $1 $3    }
 	 | int '=' '"' int word '"' { TmSet3 $1 $4 $5 }
 
-Cols : Col ',' Cols             { Tm1Cols $1 $3 }
-     | Col                      { Tm2Cols $1 }
+Cols : Col ',' Cols             { Tm1Cols $1 $3   }
+     | Col                      { Tm2Cols $1      }
 
 Col  : int nullCase int         { TmNullCol $1 $3 }
-     | int                      { TmCol $1 } 
+     | int                      { TmCol $1        } 
 
 Wheres : Where ',' Wheres       { Tm1Wheres $1 $3 }
-       | Where                  { Tm2Wheres $1 }
+       | Where                  { Tm2Wheres $1    }
 
-Where  : int '==' int           { Tm2Where $1 $3 }
-	   | int '>=' int           { Tm3Where $1 $3 }
-	   | int '<=' int           { Tm4Where $1 $3 }
-	   | int '>' int            { Tm5Where $1 $3 }
-	   | int '<' int            { Tm6Where $1 $3 }
-	   | int '!=' int           { Tm7Where $1 $3 }
-	   | int '==' word          { Tm8Where $1 $3 }
-       | int '==' notNull       { Tm9Where $1 }
+Where  : int '==' int           { Tm2Where $1 $3  }
+	   | int '>=' int           { Tm3Where $1 $3  }
+	   | int '<=' int           { Tm4Where $1 $3  }
+	   | int '>' int            { Tm5Where $1 $3  }
+	   | int '<' int            { Tm6Where $1 $3  }
+	   | int '!=' int           { Tm7Where $1 $3  }
+	   | int '==' word          { Tm8Where $1 $3  }
+       | int '==' notNull       { Tm9Where $1     }
 
 Words : word ',' Words { TmWords $1 $3 }
-      | word           { TmWord $1 }
+      | word           { TmWord $1     }
 
 {
 parseError :: [Token] -> a
