@@ -8,7 +8,7 @@ import System.FilePath ( takeExtension, splitExtension )
 import System.Directory ( listDirectory, getDirectoryContents, getCurrentDirectory, exeExtension )
 import Control.Exception ( catch, ErrorCall )
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List ( sortBy, elemIndex, elemIndices, intercalate, transpose, delete, nub )
+import Data.List ( sort, sortBy, elemIndex, elemIndices, intercalate, transpose, delete, nub )
 
 -- alex Tokens.x
 -- happy Grammar.y
@@ -65,7 +65,6 @@ readCsv csvName csvs = readMaybe (lookup csvName csvs)
 
 -- break a csv into its columns
 commaSplit :: [String] -> String -> [String]
-commaSplit [] _ = []
 commaSplit xs s = readMaybe (elemIndex ',' s)
                     where readMaybe (Just a) = commaSplit (xs ++ [take a s]) (drop (a + 1) s)
                           readMaybe Nothing = xs ++ [s]
@@ -147,7 +146,6 @@ interpreter (TmArr1 csvName i) csvs | arity == 0 = []
                                                                    where safeHead n xs | n == 0 = []
                                                                                        | n > 0 = head xs
 
--- sort a table reverse lexicographically
  -- 'arrange A desc 1'
 interpreter (TmArr2 csvName i) csvs | arity == 0 = []
                                     | i > arity = error "ArrayIndexOutOfBounds"
@@ -157,6 +155,13 @@ interpreter (TmArr2 csvName i) csvs | arity == 0 = []
                                             line = safeHead (length csv) csv
                                                      where safeHead n xs | n == 0 = []
                                                                          | n > 0 = head xs
+
+ -- 'arrange A asc'
+interpreter (TmArr3 csvName) csvs = sort (readCsv csvName csvs)
+
+ -- 'arrange A desc'
+interpreter (TmArr4 csvName) csvs = reverse $ sort (readCsv csvName csvs)
+
 
 -- append two tables together
 -- 'append (A C)'

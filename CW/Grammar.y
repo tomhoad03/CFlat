@@ -57,6 +57,8 @@ Exp : load word '=' '"' word '.csv' '"' Exp            { TmLoad $2 $5 $8 }
 	| unite word word                                  { TmUnite $2 $3 }
     | arrange word asc int                             { TmArr1 $2 $4 }
     | arrange word desc int                            { TmArr2 $2 $4 }
+	| arrange word asc                                 { TmArr3 $2 }
+	| arrange word desc                                { TmArr4 $2 }
     | append word word                                 { TmApp1 $2 $3 }
     | append word '"' word '"'                         { TmApp2 $2 $4 }
 	| append word '"' int '"'                          { TmApp3 $2 $4 }
@@ -111,6 +113,8 @@ data Exp = TmLoad String String Exp
 		 | TmUnite String String
          | TmArr1 String Int
          | TmArr2 String Int
+		 | TmArr3 String
+		 | TmArr4 String
          | TmApp1 String String
          | TmApp2 String String
 		 | TmApp3 String Int

@@ -5,6 +5,6 @@ load B = "B.csv"
 
 var C = unite A B
 
-var D = arrange C asc 1
+var D = arrange C asc
 
 preach D
