@@ -1,15 +1,13 @@
-load A = "A.csv"
+load A = "R.csv"
 
 var B = unite A A
 
-var D = select (1,2,3,4) of B where (2 == 3, 1 != 4)
+var C = unite B A
 
-var E = unite D A
+var D = select (1, 6) of C where (2 == 3, 4 == 5)
 
-var F = select (1, 6) of E where (4 == 5, 3 != 6)
+var E = select distinct (1,2) of D
 
-var G = select distinct (1,2) of F
+var F = arrange E asc
 
-var H = arrange G asc
-
-preach H
+preach F
