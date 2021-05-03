@@ -1,0 +1,14 @@
+load A = "P.csv"
+load B = "Q.csv"
+load C = "S.csv"
+load D = "R.csv"
+load E = "T.csv"
+
+var F = unite A B
+var G = unite F C
+var H = unite G D
+var I = unite H E
+
+var J = arrange I asc
+
+preach J
