@@ -1,5 +1,5 @@
-load A = "A.csv"
-load B = "B.csv"
+load A = "S.csv"
+load B = "T.csv"
 
 var C = unite A B
 
